@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="icon">
+    <file alias="add">resources/icons/add-circle-line.png</file>
+    <file alias="bubble">resources/icons/chart-bubble.png</file>
+    <file alias="crop">resources/icons/crop-line.png</file>
+    <file alias="cursor">resources/icons/cursor-default.png</file>
+    <file alias="numeric">resources/icons/numeric.png</file>
+    <file alias="ray">resources/icons/ray-start-end.png</file>
+    <file alias="combine">resources/icons/vector-combine.png</file>
+    <file alias="open_file">resources/icons/open-line.png</file>
+    <file alias="analyze">resources/icons/cpu-line.png</file>
+    <file alias="settings">resources/icons/settings-line.png</file>
+    <file alias="export">resources/icons/content-save.png</file>
+  </qresource>
+</RCC>
