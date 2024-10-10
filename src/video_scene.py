@@ -7,7 +7,7 @@ import numpy as np
 class VideoScene(QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.frames_items = {}
+        self.frames_pixmap = {}
         self.current_frame_item = QGraphicsPixmapItem()
         self.addItem(self.current_frame_item)
 
@@ -16,9 +16,9 @@ class VideoScene(QGraphicsScene):
         h, w, c = frame.shape
         img = QImage(frame.data, w, h, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(img)
-        self.frames_items[index] = QGraphicsPixmapItem(pixmap)
+        self.frames_pixmap[index] = pixmap
 
     @Slot(int)
-    def update_frame(self, index: int):
-        if index in self.frames_items:
-            self.current_frame_item.setPixmap(self.frames_items[index])
+    def change_display(self, index: int):
+        if index in self.frames_pixmap:
+            self.current_frame_item.setPixmap(self.frames_pixmap[index])

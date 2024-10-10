@@ -31,6 +31,10 @@ class MainWindow(QMainWindow):
         # 从设置文件获取窗口大小
         self.resize(settings.int_value(main_width), settings.int_value(main_height))
         self.setting_dialog = SettingDialog(settings)
+        # 设置Graphics相关组件
+        self.view = VideoView()
+        self.scene = VideoScene(self.view)
+
         self.setup_graphics()
 
         self.analyzer_worker = QThread()
@@ -40,13 +44,13 @@ class MainWindow(QMainWindow):
 
         self.setup_signals()
 
+        self.total_frames = 0
+
     def setup_graphics(self) -> None:
-        self.ui.view = VideoView()
-        self.ui.scene = VideoScene(self.ui.view)
-        self.ui.view.setScene(self.ui.scene)
-        self.ui.hbl_video.addWidget(self.ui.view)
+        self.view.setScene(self.scene)
+        self.ui.hbl_video.addWidget(self.view)
         self.ui.view_btn_grp = ViewButtonGroup()
-        self.ui.view.add_fixed_widget(self.ui.view_btn_grp, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.view.add_fixed_widget(self.ui.view_btn_grp, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
     def setup_signals(self) -> None:
         """
@@ -57,13 +61,18 @@ class MainWindow(QMainWindow):
         self.setting_dialog.accepted.connect(self.setting_accepted)
         self.sig_update_path.connect(self.update_file_path)
         self.sig_start_analyze.connect(self.analyzer.analyze)
-        # self.analyzer.sig_frame_finished.connect(self.ui.scene)
+        self.analyzer.sig_frame_finished.connect(self.scene.add_frame)
+        self.analyzer.sig_meta_info_updated.connect(self.total_frames_updated)
+        self.analyzer.sig_first_frame_finished.connect(self.scene.change_display)
+        self.analyzer.sig_first_frame_finished.connect(self.update_slider_value)
+        self.ui.sl_frame.valueChanged.connect(self.scene.change_display)
+        self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
 
     def open_file(self) -> None:
         """
         打开文件
         """
-        path, _ = QFileDialog.getOpenFileName(self, caption='Open File', filter='*.mp4|*.avi|*.mkv')
+        path, _ = QFileDialog.getOpenFileName(self, caption='Open File', filter='*.mp4|*.avi|*.mkv|*.flv')
         self.sig_update_path.emit(path)
         self.sig_start_analyze.emit(path)
 
@@ -84,6 +93,27 @@ class MainWindow(QMainWindow):
         :param file_path: 文件全路径
         """
         self.ui.lb_file_path.setText(file_path)
+
+    @Slot(int)
+    def total_frames_updated(self, max_index: int) -> None:
+        """
+        更新帧最大值
+        :param max_index: 最大帧数
+        """
+        self.total_frames = max_index
+        self.ui.sl_frame.setMaximum(max_index)
+        if self.ui.sl_frame.value() > max_index:
+            self.ui.sl_frame.setValue(max_index)
+
+    @Slot(int)
+    def update_slider_value(self, value: int) -> None:
+        if value > self.ui.sl_frame.maximum():
+            value = self.ui.sl_frame.maximum()
+        self.ui.sl_frame.setValue(value)
+
+    @Slot(int)
+    def update_lcd_value(self, value: int) -> None:
+        self.ui.lcd_frame.display(f'{value}-{self.total_frames}')
 
     def closeEvent(self, event) -> None:
         """

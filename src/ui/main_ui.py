@@ -80,17 +80,25 @@ class Ui_main_window(object):
 
         self.sl_frame = QSlider(self.central_widget)
         self.sl_frame.setObjectName(u"sl_frame")
+        self.sl_frame.setMaximum(0)
         self.sl_frame.setOrientation(Qt.Orientation.Horizontal)
+        self.sl_frame.setTickPosition(QSlider.TickPosition.NoTicks)
 
         self.hbl_control.addWidget(self.sl_frame)
 
         self.lcd_frame = QLCDNumber(self.central_widget)
         self.lcd_frame.setObjectName(u"lcd_frame")
+        self.lcd_frame.setDigitCount(9)
+        self.lcd_frame.setSegmentStyle(QLCDNumber.SegmentStyle.Flat)
 
         self.hbl_control.addWidget(self.lcd_frame)
 
         self.btn_play = QPushButton(self.central_widget)
         self.btn_play.setObjectName(u"btn_play")
+        icon4 = QIcon()
+        icon4.addFile(u":/icon/play", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_play.setIcon(icon4)
+        self.btn_play.setIconSize(QSize(20, 20))
 
         self.hbl_control.addWidget(self.btn_play)
 
@@ -143,9 +151,9 @@ class Ui_main_window(object):
 #if QT_CONFIG(tooltip)
         self.act_export.setToolTip(QCoreApplication.translate("main_window", u"\u5bfc\u51fa", None))
 #endif // QT_CONFIG(tooltip)
-        self.lb_file_path.setText(QCoreApplication.translate("main_window", u"TextLabel", None))
-        self.lb_frame.setText(QCoreApplication.translate("main_window", u"TextLabel", None))
-        self.btn_play.setText(QCoreApplication.translate("main_window", u"PushButton", None))
+        self.lb_file_path.setText("")
+        self.lb_frame.setText(QCoreApplication.translate("main_window", u"\u5e27", None))
+        self.btn_play.setText("")
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.tool_bar.setWindowTitle(QCoreApplication.translate("main_window", u"toolBar", None))
     # retranslateUi

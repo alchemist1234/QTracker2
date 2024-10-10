@@ -11,5 +11,7 @@
     <file alias="analyze">resources/icons/cpu-line.png</file>
     <file alias="settings">resources/icons/settings-line.png</file>
     <file alias="export">resources/icons/content-save.png</file>
+    <file alias="play">resources/icons/play-circle-outline.png</file>
+    <file alias="pause">resources/icons/pause-circle-outline.png</file>
   </qresource>
 </RCC>

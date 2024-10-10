@@ -7,6 +7,8 @@ class VideoView(QGraphicsView):
     def __init__(self):
         super().__init__()
         self.fixed_widgets = {}
+        self.horizontalScrollBar().valueChanged.connect(self._update_fixed_widgets)
+        self.verticalScrollBar().valueChanged.connect(self._update_fixed_widgets)
 
     def add_fixed_widget(self, widget: QWidget, alignment: Qt.AlignmentFlag):
         widget.setParent(self.viewport())
