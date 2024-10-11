@@ -1,12 +1,14 @@
+import numpy as np
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Signal, Slot, QThread, Qt
 
 from src.view.setting import *
-from src.analyzer import Analyzer
-from src.video_view import VideoView
-from src.video_scene import VideoScene
+from src.worker import VideoLoader, Analyzer
+from src.view.video_view import VideoView
+from src.view.video_scene import VideoScene
 from src.ui.main_ui import Ui_main_window
 from src.ui.view_btn_grp_ui import Ui_wid_button_group
+from src.model.models import VideoMetaInfo
 
 
 class ViewButtonGroup(QWidget):
@@ -37,14 +39,19 @@ class MainWindow(QMainWindow):
 
         self.setup_graphics()
 
-        self.analyzer_worker = QThread()
-        self.analyzer = Analyzer()
-        self.analyzer.moveToThread(self.analyzer_worker)
-        self.analyzer_worker.start()
+        self.video_loader_thread = QThread()
+        self.video_loader = VideoLoader()
+        self.video_loader.moveToThread(self.video_loader_thread)
+
+        self.analyzer_thread = QThread()
+        self.analyzer = Analyzer(settings)
+        self.analyzer.moveToThread(self.analyzer_thread)
 
         self.setup_signals()
 
-        self.total_frames = 0
+        self.video_meta = VideoMetaInfo()
+        self.video_loader_thread.start()
+        self.analyzer_thread.start()
 
     def setup_graphics(self) -> None:
         self.view.setScene(self.scene)
@@ -59,14 +66,33 @@ class MainWindow(QMainWindow):
         self.ui.act_open.triggered.connect(self.open_file)
         self.ui.act_setting.triggered.connect(self.open_settings)
         self.setting_dialog.accepted.connect(self.setting_accepted)
+        self.analyzer_thread.started.connect(self.analyzer.start)
+        self.analyzer_thread.finished.connect(self.analyzer.stop)
         self.sig_update_path.connect(self.update_file_path)
-        self.sig_start_analyze.connect(self.analyzer.analyze)
-        self.analyzer.sig_frame_finished.connect(self.scene.add_frame)
-        self.analyzer.sig_meta_info_updated.connect(self.total_frames_updated)
-        self.analyzer.sig_first_frame_finished.connect(self.scene.change_display)
-        self.analyzer.sig_first_frame_finished.connect(self.update_slider_value)
+        self.sig_start_analyze.connect(self.video_loader.load)
+        self.video_loader.sig_meta_info_updated.connect(self.video_meta_updated)
+        self.video_loader.sig_meta_info_updated.connect(self.analyzer_thread.start)
+        self.video_loader.sig_frame_finished.connect(self.scene.add_frame)
+        self.video_loader.sig_frame_finished.connect(self.analyze_data)
+        self.video_loader.sig_first_frame_finished.connect(self.scene.change_display)
+        self.video_loader.sig_first_frame_finished.connect(self.update_slider_value)
+        self.video_loader.sig_all_frame_finished.connect(self.all_analyze_data_send)
         self.ui.sl_frame.valueChanged.connect(self.scene.change_display)
         self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
+        self.analyzer.sig_frame_analyzed.connect(self.scene.add_frame_particles)
+        self.analyzer_thread.started.connect(self.analyzer.run)
+
+    @Slot(int, np.ndarray)
+    def analyze_data(self, frame_index: int, data: np.ndarray):
+        self.analyzer.add_data(frame_index, data)
+
+    @Slot()
+    def stop_analyze(self):
+        self.analyzer.stop()
+
+    @Slot()
+    def all_analyze_data_send(self):
+        self.analyzer.all_data_received()
 
     def open_file(self) -> None:
         """
@@ -95,15 +121,15 @@ class MainWindow(QMainWindow):
         self.ui.lb_file_path.setText(file_path)
 
     @Slot(int)
-    def total_frames_updated(self, max_index: int) -> None:
+    def video_meta_updated(self, meta_info: VideoMetaInfo) -> None:
         """
-        更新帧最大值
-        :param max_index: 最大帧数
+        更新视频元数据
+        :param meta_info: 视频元数据
         """
-        self.total_frames = max_index
-        self.ui.sl_frame.setMaximum(max_index)
-        if self.ui.sl_frame.value() > max_index:
-            self.ui.sl_frame.setValue(max_index)
+        self.video_meta = meta_info
+        self.ui.sl_frame.setMaximum(meta_info.frame_count)
+        if self.ui.sl_frame.value() > meta_info.frame_count:
+            self.ui.sl_frame.setValue(meta_info.frame_count)
 
     @Slot(int)
     def update_slider_value(self, value: int) -> None:
@@ -113,13 +139,15 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def update_lcd_value(self, value: int) -> None:
-        self.ui.lcd_frame.display(f'{value}-{self.total_frames}')
+        self.ui.lcd_frame.display(f'{value}-{self.video_meta.frame_count}')
 
     def closeEvent(self, event) -> None:
         """
         重写退出方法，关闭线程
         :param event: 退出事件
         """
-        self.analyzer_worker.quit()
-        self.analyzer_worker.wait()
+        self.video_loader_thread.quit()
+        self.video_loader_thread.wait()
+        self.analyzer_thread.quit()
+        self.analyzer_thread.wait()
         super().closeEvent(event)
