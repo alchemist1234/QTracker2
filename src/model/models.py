@@ -4,6 +4,9 @@ from typing import Tuple, Any, Dict, Set, List
 
 @dataclass
 class VideoMetaInfo:
+    """
+    视频元数据对象
+    """
     width: int = 0
     height: int = 0
     fps: int = 0
@@ -12,11 +15,17 @@ class VideoMetaInfo:
 
 @dataclass
 class HistoryParticle:
+    """
+    历史粒子位置对象
+    """
     frame_index: int
     center: Tuple[Any, ...]
 
 
 class ParticlePositions:
+    """
+    用于记录一个视频每一帧的粒子位置
+    """
     def __init__(self):
         # {粒子ID : {帧ID : (x, y)}}
         self.particles: Dict[int, Dict[int, Tuple[int, int]]] = {}

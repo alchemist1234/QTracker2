@@ -5,6 +5,12 @@ from PySide6.QtGui import QColor, QFont
 
 @dataclass
 class SettingItem:
+    """
+    设置项
+    :param section       配置段
+    :param key           配置项
+    :param default_value 配置默认值
+    """
     section: str
     key: str
     default_value: Any

@@ -39,21 +39,31 @@ class MainWindow(QMainWindow):
 
         self.setup_graphics()
 
+        # 视频加载线程
         self.video_loader_thread = QThread()
         self.video_loader = VideoLoader()
         self.video_loader.moveToThread(self.video_loader_thread)
 
+        # 视频分析线程
         self.analyzer_thread = QThread()
         self.analyzer = Analyzer(settings)
         self.analyzer.moveToThread(self.analyzer_thread)
 
+        # 设置信息/槽连接
         self.setup_signals()
 
+        # 额外数据
         self.video_meta = VideoMetaInfo()
+
+        # 开启线程
+        # TODO 是否可以在需要时开启和关闭
         self.video_loader_thread.start()
         self.analyzer_thread.start()
 
     def setup_graphics(self) -> None:
+        """
+        设置图像显示控件
+        """
         self.view.setScene(self.scene)
         self.ui.hbl_video.addWidget(self.view)
         self.ui.view_btn_grp = ViewButtonGroup()
@@ -63,9 +73,12 @@ class MainWindow(QMainWindow):
         """
         设置信号/槽连接
         """
+        # 工具栏按钮点击
         self.ui.act_open.triggered.connect(self.open_file)
         self.ui.act_setting.triggered.connect(self.open_settings)
+        # 设置窗口
         self.setting_dialog.accepted.connect(self.setting_accepted)
+        # 视频加载/分析
         self.analyzer_thread.started.connect(self.analyzer.start)
         self.analyzer_thread.finished.connect(self.analyzer.stop)
         self.sig_update_path.connect(self.update_file_path)
@@ -84,14 +97,25 @@ class MainWindow(QMainWindow):
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):
+        """
+        视频加载完后将数据发送到分析器
+        :param frame_index: 帧ID
+        :param data: 视频帧数据
+        """
         self.analyzer.add_data(frame_index, data)
 
     @Slot()
     def stop_analyze(self):
+        """
+        停止分析
+        """
         self.analyzer.stop()
 
     @Slot()
     def all_analyze_data_send(self):
+        """
+        所有帧数据发送完毕
+        """
         self.analyzer.all_data_received()
 
     @Slot()

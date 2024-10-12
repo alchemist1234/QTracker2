@@ -12,6 +12,9 @@ from src.settings.settings import Settings
 
 
 class VideoLoader(QObject):
+    """
+    视频加载器
+    """
     sig_meta_info_updated = Signal(VideoMetaInfo)
     sig_frame_finished = Signal(int, np.ndarray)
     sig_first_frame_finished = Signal(int)
@@ -47,6 +50,9 @@ class VideoLoader(QObject):
 
 
 class Analyzer(QObject):
+    """
+    视频分析器
+    """
     sig_frame_analyzed = Signal(int, dict)
 
     class Judgement(Enum):
@@ -60,13 +66,18 @@ class Analyzer(QObject):
         self.settings = settings
         self.history_particles = {}
         self.max_label = 0
+
+        # 待分析视频帧数据
         # [(frame_index, ndarray)]
         self.data_queue: List[Tuple[int, np.ndarray]] = []
+        # 是否正在分析
         self.running = False
+        # 当前视频所有帧是否已全部发送到self.data_queue
         self.receiving = False
 
     @Slot()
-    def run(self):
+    def run(self) -> None:
+        # 循环分析视频帧
         while True:
             if not self.running:
                 # 停止任务时结束循环
@@ -74,7 +85,7 @@ class Analyzer(QObject):
             if not self.receiving and len(self.data_queue) == 0:
                 # 分析完成时结束循环
                 break
-            # 本次循环是否有任务进行，没有则等待1s后进入下一循环，避免死循环频率过高占用CPU
+            # 本次循环是否有任务进行，没有则等待0.5s后进入下一循环，避免死循环频率过高占用CPU
             work = False
             if len(self.data_queue) > 0:
                 work = True
@@ -82,11 +93,15 @@ class Analyzer(QObject):
                 frame_index, frame = data
                 particle_pos = self.analyze(frame_index, frame)
                 if self.running:
+                    # 发送帧分析完成信号
                     self.sig_frame_analyzed.emit(frame_index, particle_pos)
             if not work:
                 time.sleep(0.5)
 
-    def start(self):
+    def start(self) -> None:
+        """
+        开始分析视频
+        """
         self.data_queue.clear()
         self.history_particles.clear()
         self.max_label = 0
@@ -95,16 +110,33 @@ class Analyzer(QObject):
         self.run()
 
     def add_data(self, frame_index: int, frame: np.ndarray) -> None:
+        """
+        添加视频帧数据
+        :param frame_index: 视频帧ID
+        :param frame: 视频帧数据
+        """
         self.data_queue.append((frame_index, frame))
 
     def stop(self):
+        """
+        停止分析
+        """
         self.running = False
         self.receiving = False
 
     def all_data_received(self):
+        """
+        所有视频帧已接收完成
+        """
         self.receiving = False
 
     def analyze(self, frame_index: int, frame: np.ndarray) -> Dict[int, Tuple[int, int]]:
+        """
+        分析视频数据
+        :param frame_index: 帧ID
+        :param frame: 帧数据
+        :return: 当前帧所有粒子
+        """
         frame_particles = {}
         frame, frame_gray = self.smooth(frame)
         binary = self.binary(frame_gray)
@@ -134,7 +166,13 @@ class Analyzer(QObject):
                 self.max_label += 1
             return frame_particles
 
-    def same_particle(self, old_center, new_center):
+    def same_particle(self, old_center, new_center) -> bool:
+        """
+        判断两个粒子是否为同一个
+        :param old_center: 原位置
+        :param new_center: 新位置
+        :return: 是否同一粒子
+        """
         dis = self.settings.int_value(default_settings.memory_frames)
         return abs(new_center[0] - old_center[0]) <= dis and abs(new_center[1] - old_center[1]) <= dis
 
