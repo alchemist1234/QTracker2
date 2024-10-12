@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'view_btn_grp.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.3
+## Created by: Qt User Interface Compiler version 6.8.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -92,7 +92,7 @@ class Ui_wid_button_group(object):
 
         self.vboxLayout.addWidget(self.btn_combine)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.vboxLayout.addItem(self.verticalSpacer)
 

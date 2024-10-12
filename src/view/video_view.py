@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt, QPoint
-from PySide6.QtGui import *
+from PySide6.QtGui import QWheelEvent
 
 
 class VideoView(QGraphicsView):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.fixed_widgets = {}
         self.horizontalScrollBar().valueChanged.connect(self._update_fixed_widgets)
         self.verticalScrollBar().valueChanged.connect(self._update_fixed_widgets)

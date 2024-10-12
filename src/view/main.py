@@ -94,13 +94,16 @@ class MainWindow(QMainWindow):
     def all_analyze_data_send(self):
         self.analyzer.all_data_received()
 
+    @Slot()
     def open_file(self) -> None:
         """
         打开文件
         """
         path, _ = QFileDialog.getOpenFileName(self, caption='Open File', filter='*.mp4|*.avi|*.mkv|*.flv')
-        self.sig_update_path.emit(path)
-        self.sig_start_analyze.emit(path)
+        if path:
+            print(f'path: {path}, ext: {_}')
+            self.sig_update_path.emit(path)
+            self.sig_start_analyze.emit(path)
 
     def open_settings(self) -> None:
         """
@@ -110,6 +113,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def setting_accepted(self):
+        """
+        设置确认
+        """
         self.setting_dialog.save_settings()
 
     @Slot(str)
@@ -133,12 +139,20 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def update_slider_value(self, value: int) -> None:
+        """
+        更新进度条
+        :param value: 进度条值
+        """
         if value > self.ui.sl_frame.maximum():
             value = self.ui.sl_frame.maximum()
         self.ui.sl_frame.setValue(value)
 
     @Slot(int)
     def update_lcd_value(self, value: int) -> None:
+        """
+        更新LCD值
+        :param value:
+        """
         self.ui.lcd_frame.display(f'{value}-{self.video_meta.frame_count}')
 
     def closeEvent(self, event) -> None:
@@ -146,7 +160,10 @@ class MainWindow(QMainWindow):
         重写退出方法，关闭线程
         :param event: 退出事件
         """
+        # 停止子线程
+        self.analyzer.stop()
         self.video_loader_thread.quit()
+        # 等待子线程退出
         self.video_loader_thread.wait()
         self.analyzer_thread.quit()
         self.analyzer_thread.wait()
