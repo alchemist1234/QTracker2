@@ -547,7 +547,7 @@ class Ui_Dialog(object):
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -583,7 +583,7 @@ class Ui_Dialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_analyze), QCoreApplication.translate("Dialog", u"\u5206\u6790", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("Dialog", u"\u7c92\u5b50", None))
         self.lb_particle_color.setText(QCoreApplication.translate("Dialog", u"\u7c92\u5b50\u989c\u8272", None))
-        self.lb_particle_color_display.setText(QCoreApplication.translate("Dialog", u"test", None))
+        self.lb_particle_color_display.setText("")
         self.lb_particle_size.setText(QCoreApplication.translate("Dialog", u"\u7c92\u5b50\u5927\u5c0f", None))
         self.groupBox_7.setTitle(QCoreApplication.translate("Dialog", u"\u6807\u8bb0", None))
         self.lb_mark_color.setText(QCoreApplication.translate("Dialog", u"\u6807\u8bb0\u989c\u8272", None))

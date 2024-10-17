@@ -46,21 +46,6 @@ class Ui_dialog_color_editor(object):
 
         self.verticalLayout.addWidget(self.btn_delete)
 
-        self.btn_random = QPushButton(dialog_color_editor)
-        self.btn_random.setObjectName(u"btn_random")
-
-        self.verticalLayout.addWidget(self.btn_random)
-
-        self.btn_move_up = QPushButton(dialog_color_editor)
-        self.btn_move_up.setObjectName(u"btn_move_up")
-
-        self.verticalLayout.addWidget(self.btn_move_up)
-
-        self.btn_move_down = QPushButton(dialog_color_editor)
-        self.btn_move_down.setObjectName(u"btn_move_down")
-
-        self.verticalLayout.addWidget(self.btn_move_down)
-
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer)
@@ -88,9 +73,6 @@ class Ui_dialog_color_editor(object):
         dialog_color_editor.setWindowTitle(QCoreApplication.translate("dialog_color_editor", u"Dialog", None))
         self.btn_add.setText(QCoreApplication.translate("dialog_color_editor", u"\u6dfb\u52a0\u989c\u8272", None))
         self.btn_delete.setText(QCoreApplication.translate("dialog_color_editor", u"\u5220\u9664\u989c\u8272", None))
-        self.btn_random.setText(QCoreApplication.translate("dialog_color_editor", u"\u968f\u673a\u989c\u8272", None))
-        self.btn_move_up.setText(QCoreApplication.translate("dialog_color_editor", u"\u4e0a\u79fb\u4e00\u4f4d", None))
-        self.btn_move_down.setText(QCoreApplication.translate("dialog_color_editor", u"\u4e0b\u79fb\u4e00\u4f4d", None))
         self.btn_ok.setText(QCoreApplication.translate("dialog_color_editor", u"\u786e\u5b9a", None))
         self.btn_cancel.setText(QCoreApplication.translate("dialog_color_editor", u"\u53d6\u6d88", None))
     # retranslateUi

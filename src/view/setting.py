@@ -94,11 +94,11 @@ class SettingDialog(QDialog):
         self.settings.set_value(to_frames, self.ui.spb_to_frames.value())
 
         # Display
-        self.settings.set_value(particle_color, self.ui.lb_particle_color.colors())
+        self.settings.set_value(particle_color, self.ui.lb_particle_color_display.colors)
         self.settings.set_value(particle_size, self.ui.spb_particle_size.value())
-        self.settings.set_value(mark_color, self.ui.lb_mark_color.colors())
+        self.settings.set_value(mark_color, self.ui.lb_mark_color_display.colors)
         self.settings.set_value(mark_size, self.ui.spb_mark_size.value())
-        self.settings.set_value(trajectory_color, self.ui.lb_trajectory_color.colors())
+        self.settings.set_value(trajectory_color, self.ui.lb_trajectory_color_display.colors)
         self.settings.set_value(trajectory_width, self.ui.spb_trajectory_width.value())
 
         self.settings.sync()
