@@ -12,6 +12,10 @@ from src.view.color_editor import ColorEditor
 
 class SettingDialog(QDialog):
     def __init__(self, settings: Settings):
+        """
+        设置对话框
+        :param settings: 设置数据
+        """
         super().__init__()
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -22,10 +26,14 @@ class SettingDialog(QDialog):
         self.load_settings()
         self.setup_connects()
 
-    def setup_connects(self):
+    def setup_connects(self) -> None:
+        """
+        设置信号-槽连接
+        """
         self.ui.lb_particle_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_particle_color_display))
         self.ui.lb_mark_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_mark_color_display))
-        self.ui.lb_trajectory_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_trajectory_color_display))
+        self.ui.lb_trajectory_color_display.clicked.connect(
+            lambda x: self.edit_colors(self.ui.lb_trajectory_color_display))
 
     def edit_colors(self, label: ColorLabel):
         editor = ColorEditor(self, label)
@@ -34,10 +42,18 @@ class SettingDialog(QDialog):
         editor.exec()
 
     @Slot(ColorLabel, list)
-    def update_color(self, label: ColorLabel, colors: List[QColor]):
+    def update_color(self, label: ColorLabel, colors: List[QColor]) -> None:
+        """
+        更新ColorLabel颜色
+        :param label: 需要设置颜色的ColorLabel
+        :param colors: 颜色
+        """
         label.set_color(colors)
 
-    def load_settings(self):
+    def load_settings(self) -> None:
+        """
+        从配置中加载数据到窗口
+        """
         self.ui.spb_median_blur.setValue(self.settings.int_value(median_blur))
         self.ui.spb_gaussian_blur.setValue(self.settings.int_value(gaussian_blur))
         self.ui.spb_opening_size.setValue(self.settings.int_value(opening_size))
@@ -68,7 +84,10 @@ class SettingDialog(QDialog):
         self.ui.lb_trajectory_color_display.set_color(self.settings.value(trajectory_color))
         self.ui.spb_trajectory_width.setValue(self.settings.int_value(trajectory_width))
 
-    def save_settings(self):
+    def save_settings(self) -> None:
+        """
+        保存配置信息到Setting对象，并刷新配置文件
+        """
         # analyze
         self.settings.set_value(median_blur, self.ui.spb_median_blur.value())
         self.settings.set_value(gaussian_blur, self.ui.spb_gaussian_blur.value())
