@@ -1,11 +1,11 @@
 import numpy as np
 from typing import Tuple, List
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox
 from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtCore import Slot, QByteArray, QBuffer
+from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF
 
-from src.model.models import ParticlePositions, GraphicItems
+from src.model.models import ParticlePositions, GraphicItems, OperationMode
 from src.settings.settings import Settings
 
 
@@ -13,6 +13,8 @@ class VideoScene(QGraphicsScene):
     def __init__(self, parent=None, settings: Settings = None):
         super().__init__(parent)
         self.settings = settings
+        # 当前操作模式
+        self.mode = OperationMode.MOVE
         # 用base64存储图像数据，用QImage或者QPixmap存储内存占用过大
         self.frames_base64 = {}
         # 粒子位置原始数据
@@ -23,6 +25,10 @@ class VideoScene(QGraphicsScene):
         self.particle_items = []
         # 当前添加到QGraphicsScene中的轨迹Item
         self.trajectory_items = []
+        # 当前帧
+        self.current_frame_index = -1
+        # 当前鼠标按下位置
+        self.mouse_press_pos = QPointF()
 
         self.current_frame_item = QGraphicsPixmapItem()
         self.addItem(self.current_frame_item)
@@ -43,6 +49,7 @@ class VideoScene(QGraphicsScene):
         """
         切换帧显示
         """
+        self.current_frame_index = index
         self.change_frame_display(index)
         self.change_particle_display(index)
         self.change_trajectory_display(index)
@@ -111,7 +118,41 @@ class VideoScene(QGraphicsScene):
         """
         清除所有数据
         """
+        self.current_frame_index = -1
         self.graphic_items.clear()
         self.particle_items.clear()
         self.trajectory_items.clear()
         self.clear()
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
+        self.mouse_press_pos = event.scenePos()
+        if self.mode == OperationMode.ADD:
+            if self.current_frame_index in self.frames_base64:
+                scene_pos = event.scenePos().toPoint()
+                index, ok = QInputDialog.getInt(self, '输入', '粒子编号', 1)
+                if ok:
+                    self.particle_data.add_particle(self.current_frame_index, index, (scene_pos.x(), scene_pos.y()))
+                    self.update_frame_item(self.current_frame_index)
+                    self.change_display(self.current_frame_index)
+            else:
+                QMessageBox.information(self, '提示', f'未加载视频')
+        super(VideoScene, self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+        pos = event.scenePos()
+        moved = pos - self.mouse_press_pos
+        if moved.manhattanLength() > 0:
+            if len(self.selectedItems()) > 0:
+                for item in self.selectedItems():
+                    index = item.index
+                    next_frame = self.particle_data.move_particle_by(self.current_frame_index, index,
+                                                                     (moved.x(), moved.y()))
+                    if next_frame:
+                        self.update_frame_item(next_frame)
+                self.update_frame_item(self.current_frame_index)
+                self.change_display(self.current_frame_index)
+        super(VideoScene, self).mouseReleaseEvent(event)
+
+    def update_frame_item(self, frame_index: int):
+        self.graphic_items.generate_particle_items(frame_index)
+        self.graphic_items.generate_trajectory_items(frame_index)

@@ -1,8 +1,18 @@
 from dataclasses import dataclass
-from typing import Tuple, Any, Dict, Set, List, Collection
+from typing import Tuple, Any, Dict, Set, List, Collection, Optional
+from enum import Enum
 
 from src.view.custom_widget import ParticleItem, MarkItem, TrajectoryItem
 from src.settings.settings import Settings
+
+
+class OperationMode(Enum):
+    """
+    VideoScene 的操作类型
+    """
+    MOVE = 0
+    CROP = 1
+    ADD = 2
 
 
 @dataclass
@@ -41,9 +51,32 @@ class ParticlePositions(object):
         :param particle_id: 粒子ID
         :param pos: 位置
         """
-        frame_pos = self.particles.get(particle_id, {})
-        frame_pos[frame_index] = pos
-        self.particles[particle_id] = frame_pos
+        particle_pos = self.particles.get(particle_id, {})
+        particle_pos[frame_index] = pos
+        self.particles[particle_id] = particle_pos
+
+    def move_particle_by(self, frame_index: int, particle_id: int, vector: Tuple[int, int]) -> Optional[int]:
+        particle_pos = self.particles.get(particle_id, {})
+        if frame_index in particle_pos:
+            pos = particle_pos[frame_index]
+            particle_pos[frame_index] = (pos[0] + vector[0], pos[1] + vector[1])
+            frame_indexes_after = [i for i in particle_pos.keys() if i > frame_index]
+            if len(frame_indexes_after) > 0:
+                return min(frame_indexes_after)
+            else:
+                return None
+        return None
+
+    def delete_particle(self, frame_index: int, particle_id: int) -> Optional[int]:
+        particle_pos = self.particles.get(particle_id, {})
+        if frame_index in particle_pos:
+            del particle_pos[frame_index]
+            frame_indexes_after = [i for i in particle_pos.keys() if i > frame_index]
+            if len(frame_indexes_after) > 0:
+                return min(frame_indexes_after)
+            else:
+                return None
+        return None
 
     def remove_frame_particles(self, frame_index: int) -> None:
         """
