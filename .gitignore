@@ -2,3 +2,6 @@
 **/__pycache__/
 .idea
 config.ini
+app.build
+app.dist
+out
