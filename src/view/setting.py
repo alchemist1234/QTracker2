@@ -1,8 +1,13 @@
+from typing import List
+
 from PySide6.QtWidgets import QDialog
+from PySide6.QtCore import Slot
 
 from src.ui.settings_ui import Ui_Dialog
 from src.settings.settings import Settings
 from src.settings.default_settings import *
+from src.view.custom_widget import ColorLabel
+from src.view.color_editor import ColorEditor
 
 
 class SettingDialog(QDialog):
@@ -11,7 +16,26 @@ class SettingDialog(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         self.settings = settings
+        self.ui.lb_particle_color_display.setFixedSize(76, 20)
+        self.ui.lb_mark_color_display.setFixedSize(76, 20)
+        self.ui.lb_trajectory_color_display.setFixedSize(76, 20)
         self.load_settings()
+        self.setup_connects()
+
+    def setup_connects(self):
+        self.ui.lb_particle_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_particle_color_display))
+        self.ui.lb_mark_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_mark_color_display))
+        self.ui.lb_trajectory_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_trajectory_color_display))
+
+    def edit_colors(self, label: ColorLabel):
+        editor = ColorEditor(self, label)
+        editor.add_colors(label.colors)
+        editor.sig_color_changed.connect(self.update_color)
+        editor.exec()
+
+    @Slot(ColorLabel, list)
+    def update_color(self, label: ColorLabel, colors: List[QColor]):
+        label.set_color(colors)
 
     def load_settings(self):
         self.ui.spb_median_blur.setValue(self.settings.int_value(median_blur))
@@ -36,6 +60,13 @@ class SettingDialog(QDialog):
         self.ui.spb_skip_frames.setValue(self.settings.int_value(skip_frames))
         self.ui.spb_from_frames.setValue(self.settings.int_value(from_frames))
         self.ui.spb_to_frames.setValue(self.settings.int_value(to_frames))
+        # Display
+        self.ui.lb_particle_color_display.set_color(self.settings.value(particle_color))
+        self.ui.spb_particle_size.setValue(self.settings.int_value(particle_size))
+        self.ui.lb_mark_color_display.set_color(self.settings.value(mark_color))
+        self.ui.spb_mark_size.setValue(self.settings.int_value(mark_size))
+        self.ui.lb_trajectory_color_display.set_color(self.settings.value(trajectory_color))
+        self.ui.spb_trajectory_width.setValue(self.settings.int_value(trajectory_width))
 
     def save_settings(self):
         # analyze
@@ -61,5 +92,13 @@ class SettingDialog(QDialog):
         self.settings.set_value(skip_frames, self.ui.spb_skip_frames.value())
         self.settings.set_value(from_frames, self.ui.spb_from_frames.value())
         self.settings.set_value(to_frames, self.ui.spb_to_frames.value())
-        # display
+
+        # Display
+        self.settings.set_value(particle_color, self.ui.lb_particle_color.colors())
+        self.settings.set_value(particle_size, self.ui.spb_particle_size.value())
+        self.settings.set_value(mark_color, self.ui.lb_mark_color.colors())
+        self.settings.set_value(mark_size, self.ui.spb_mark_size.value())
+        self.settings.set_value(trajectory_color, self.ui.lb_trajectory_color.colors())
+        self.settings.set_value(trajectory_width, self.ui.spb_trajectory_width.value())
+
         self.settings.sync()

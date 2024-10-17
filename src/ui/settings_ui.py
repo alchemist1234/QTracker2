@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QDialog
     QLayout, QSizePolicy, QSpacerItem, QSpinBox,
     QTabWidget, QVBoxLayout, QWidget)
 
+from src.view.custom_widget import ColorLabel
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -427,6 +429,108 @@ class Ui_Dialog(object):
         self.tab_display.setObjectName(u"tab_display")
         self.verticalLayout7 = QVBoxLayout(self.tab_display)
         self.verticalLayout7.setObjectName(u"verticalLayout7")
+        self.groupBox_6 = QGroupBox(self.tab_display)
+        self.groupBox_6.setObjectName(u"groupBox_6")
+        self.verticalLayout_2 = QVBoxLayout(self.groupBox_6)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.horizontalLayout_11 = QHBoxLayout()
+        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
+        self.lb_particle_color = QLabel(self.groupBox_6)
+        self.lb_particle_color.setObjectName(u"lb_particle_color")
+
+        self.horizontalLayout_11.addWidget(self.lb_particle_color)
+
+        self.lb_particle_color_display = ColorLabel(self.groupBox_6)
+        self.lb_particle_color_display.setObjectName(u"lb_particle_color_display")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.lb_particle_color_display.sizePolicy().hasHeightForWidth())
+        self.lb_particle_color_display.setSizePolicy(sizePolicy1)
+        self.lb_particle_color_display.setBaseSize(QSize(76, 20))
+
+        self.horizontalLayout_11.addWidget(self.lb_particle_color_display)
+
+        self.lb_particle_size = QLabel(self.groupBox_6)
+        self.lb_particle_size.setObjectName(u"lb_particle_size")
+
+        self.horizontalLayout_11.addWidget(self.lb_particle_size)
+
+        self.spb_particle_size = QSpinBox(self.groupBox_6)
+        self.spb_particle_size.setObjectName(u"spb_particle_size")
+
+        self.horizontalLayout_11.addWidget(self.spb_particle_size)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
+
+
+        self.verticalLayout7.addWidget(self.groupBox_6)
+
+        self.groupBox_7 = QGroupBox(self.tab_display)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        self.verticalLayout_3 = QVBoxLayout(self.groupBox_7)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.horizontalLayout_12 = QHBoxLayout()
+        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+        self.lb_mark_color = QLabel(self.groupBox_7)
+        self.lb_mark_color.setObjectName(u"lb_mark_color")
+
+        self.horizontalLayout_12.addWidget(self.lb_mark_color)
+
+        self.lb_mark_color_display = ColorLabel(self.groupBox_7)
+        self.lb_mark_color_display.setObjectName(u"lb_mark_color_display")
+
+        self.horizontalLayout_12.addWidget(self.lb_mark_color_display)
+
+        self.lb_mark_size = QLabel(self.groupBox_7)
+        self.lb_mark_size.setObjectName(u"lb_mark_size")
+
+        self.horizontalLayout_12.addWidget(self.lb_mark_size)
+
+        self.spb_mark_size = QSpinBox(self.groupBox_7)
+        self.spb_mark_size.setObjectName(u"spb_mark_size")
+
+        self.horizontalLayout_12.addWidget(self.spb_mark_size)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_12)
+
+
+        self.verticalLayout7.addWidget(self.groupBox_7)
+
+        self.groupBox_8 = QGroupBox(self.tab_display)
+        self.groupBox_8.setObjectName(u"groupBox_8")
+        self.verticalLayout_4 = QVBoxLayout(self.groupBox_8)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.horizontalLayout_13 = QHBoxLayout()
+        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
+        self.lb_trajectory_color = QLabel(self.groupBox_8)
+        self.lb_trajectory_color.setObjectName(u"lb_trajectory_color")
+
+        self.horizontalLayout_13.addWidget(self.lb_trajectory_color)
+
+        self.lb_trajectory_color_display = ColorLabel(self.groupBox_8)
+        self.lb_trajectory_color_display.setObjectName(u"lb_trajectory_color_display")
+
+        self.horizontalLayout_13.addWidget(self.lb_trajectory_color_display)
+
+        self.lb_trajectory_width = QLabel(self.groupBox_8)
+        self.lb_trajectory_width.setObjectName(u"lb_trajectory_width")
+
+        self.horizontalLayout_13.addWidget(self.lb_trajectory_width)
+
+        self.spb_trajectory_width = QSpinBox(self.groupBox_8)
+        self.spb_trajectory_width.setObjectName(u"spb_trajectory_width")
+
+        self.horizontalLayout_13.addWidget(self.spb_trajectory_width)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_13)
+
+
+        self.verticalLayout7.addWidget(self.groupBox_8)
+
         self.tabWidget.addTab(self.tab_display, "")
 
         self.verticalLayout.addWidget(self.tabWidget)
@@ -443,7 +547,7 @@ class Ui_Dialog(object):
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -477,6 +581,18 @@ class Ui_Dialog(object):
         self.lb_from_frames.setText(QCoreApplication.translate("Dialog", u"\u8d77\u59cb\u5e27", None))
         self.lb_to_frames.setText(QCoreApplication.translate("Dialog", u"\u7ed3\u675f\u5e27", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_analyze), QCoreApplication.translate("Dialog", u"\u5206\u6790", None))
+        self.groupBox_6.setTitle(QCoreApplication.translate("Dialog", u"\u7c92\u5b50", None))
+        self.lb_particle_color.setText(QCoreApplication.translate("Dialog", u"\u7c92\u5b50\u989c\u8272", None))
+        self.lb_particle_color_display.setText(QCoreApplication.translate("Dialog", u"test", None))
+        self.lb_particle_size.setText(QCoreApplication.translate("Dialog", u"\u7c92\u5b50\u5927\u5c0f", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("Dialog", u"\u6807\u8bb0", None))
+        self.lb_mark_color.setText(QCoreApplication.translate("Dialog", u"\u6807\u8bb0\u989c\u8272", None))
+        self.lb_mark_color_display.setText("")
+        self.lb_mark_size.setText(QCoreApplication.translate("Dialog", u"\u6807\u8bb0\u5927\u5c0f", None))
+        self.groupBox_8.setTitle(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9", None))
+        self.lb_trajectory_color.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u989c\u8272", None))
+        self.lb_trajectory_color_display.setText("")
+        self.lb_trajectory_width.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u5bbd\u5ea6", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_display), QCoreApplication.translate("Dialog", u"\u663e\u793a", None))
     # retranslateUi
 

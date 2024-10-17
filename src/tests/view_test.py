@@ -1,10 +1,9 @@
 import sys
 
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QGraphicsView
-from PySide6.QtCore import QThread, Qt
+from PySide6.QtWidgets import QApplication, QWidget, QHBoxLayout, QGraphicsView
 
-from src.util.widget_util import ColorLabel
+from src.view.custom_widget import ColorLabel
 
 
 class View(QGraphicsView):

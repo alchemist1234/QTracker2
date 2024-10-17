@@ -55,7 +55,7 @@ mark_font = SettingItem(section='display', key='mark_font', default_value=QFont(
 show_mark = SettingItem(section='display', key='show_mark', default_value=True)
 same_mark_color_with_particle = SettingItem(section='display', key='same_mark_color_with_particle', default_value=False)
 trajectory_color = SettingItem(section='display', key='trajectory_color', default_value=QColor(0, 0, 255))
-trajectory_size = SettingItem(section='display', key='trajectory_size', default_value=2)
+trajectory_width = SettingItem(section='display', key='trajectory_size', default_value=2)
 show_trajectory = SettingItem(section='display', key='show_trajectory', default_value=True)
 same_trajectory_color_with_particle = SettingItem(section='display', key='same_trajectory_color_with_particle',
                                                   default_value=False)

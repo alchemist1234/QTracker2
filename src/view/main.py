@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         self.analyzer.moveToThread(self.analyzer_thread)
 
         # 设置信息/槽连接
-        self.setup_signals()
+        self.setup_connects()
 
         # 额外数据
         self.video_meta = VideoMetaInfo()
@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
         self.ui.view_btn_grp = ViewButtonGroup()
         self.view.add_fixed_widget(self.ui.view_btn_grp, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
-    def setup_signals(self) -> None:
+    def setup_connects(self) -> None:
         """
         设置信号/槽连接
         """
@@ -123,7 +123,8 @@ class MainWindow(QMainWindow):
         """
         打开文件
         """
-        path, _ = QFileDialog.getOpenFileName(self, caption='Open File', filter='*.mp4|*.avi|*.mkv|*.flv')
+        path, _ = QFileDialog.getOpenFileName(self, caption='Open File',
+                                              filter='Video Files(*.mp4 *.avi *.mkv *.flv);;All File(*.*)')
         if path:
             print(f'path: {path}, ext: {_}')
             self.sig_update_path.emit(path)

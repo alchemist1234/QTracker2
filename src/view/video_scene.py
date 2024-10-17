@@ -1,9 +1,9 @@
 import numpy as np
-from typing import Dict, Tuple, List
+from typing import Tuple, List
 
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem
 from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtCore import Slot, QByteArray, QBuffer, QIODevice
+from PySide6.QtCore import Slot, QByteArray, QBuffer
 
 from src.model.models import ParticlePositions
 

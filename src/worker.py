@@ -1,10 +1,9 @@
 from enum import Enum
 from typing import Dict, Tuple, List
 import time
-import json
 
 import numpy as np
-from PySide6.QtCore import QObject, Signal, Slot, QPoint
+from PySide6.QtCore import QObject, Signal, Slot
 import cv2
 
 from src.model.models import VideoMetaInfo, HistoryParticle
