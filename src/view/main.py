@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
         self.setting_dialog = SettingDialog(settings)
         # 设置Graphics相关组件
         self.view = VideoView()
-        self.scene = VideoScene(self.view)
+        self.scene = VideoScene(self.view, self.settings)
 
         self.setup_graphics()
 

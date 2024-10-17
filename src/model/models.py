@@ -90,7 +90,7 @@ class ParticlePositions(object):
                 k, v in self.particles.items() if frame_index in v and len(v[frame_index]) > 0
                 and (k in particle_ids or not particle_ids)}
 
-    def clear_data(self):
+    def clear(self):
         self.particles.clear()
 
 
@@ -150,3 +150,31 @@ class GraphicItems(object):
             frame_trajectory_items[particle_id] = TrajectoryItem(self.settings, particle_id, start_pos[0], start_pos[1],
                                                                  end_pos[0], end_pos[1])
         self.trajectory_items[frame_index] = frame_trajectory_items
+
+    def get_particle_items(self, frame_index: int) -> List[ParticleItem]:
+        """
+        返回一帧所有粒子Item对象列表
+        :param frame_index: 帧ID
+        :return: 粒子Item对象列表
+        """
+        if frame_index in self.particle_items:
+            return list(self.particle_items[frame_index].values())
+        return []
+
+    def get_trajectory_items(self, frame_index: int) -> List[TrajectoryItem]:
+        """
+        返回一帧所有轨迹Item对象列表
+        :param frame_index: 帧ID
+        :return: 轨迹Item对象列表
+        """
+        return [item for f_index, item_dict in self.trajectory_items.items() if f_index <= frame_index
+                for item in item_dict.values()]
+
+    def clear(self) -> None:
+        """
+        清空数据
+        """
+        self.particle_positions.clear()
+        self.particle_items.clear()
+        self.mark_items.clear()
+        self.trajectory_items.clear()

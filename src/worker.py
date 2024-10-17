@@ -103,9 +103,8 @@ class Analyzer(QObject):
                 data = self.data_queue.pop(0)
                 frame_index, frame = data
                 particle_pos = self.analyze(frame_index, frame)
-                if self.running:
+                if self.running and particle_pos is not None:
                     # 发送帧分析完成信号
-                    # print(f'{frame_index}, {particle_pos}')
                     self.sig_frame_analyzed.emit(frame_index, list(particle_pos.items()))
             if not work:
                 time.sleep(0.5)
