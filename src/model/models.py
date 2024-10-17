@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Tuple, Any, Dict, Set, List
 
-from src.util.graphic_util import ParticleItem, MarkItem, TrajectoryItem
+from src.view.custom_widget import ParticleItem, MarkItem, TrajectoryItem
 from src.settings.settings import Settings
 
 
