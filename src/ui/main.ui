@@ -27,7 +27,11 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="hbl_video"/>
+     <layout class="QHBoxLayout" name="hbl_video">
+      <item>
+       <widget class="VideoView" name="gv_video"/>
+      </item>
+     </layout>
     </item>
     <item>
      <layout class="QHBoxLayout" name="hbl_control" stretch="0,0,0,0,0">
@@ -178,6 +182,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>VideoView</class>
+   <extends>QGraphicsView</extends>
+   <header>src.view.video_view</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../../resources.qrc"/>
  </resources>

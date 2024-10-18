@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLCDNumber, QLabel,
     QLayout, QLineEdit, QMainWindow, QMenu,
     QMenuBar, QPushButton, QSizePolicy, QSlider,
     QStatusBar, QToolBar, QVBoxLayout, QWidget)
+
+from src.view.video_view import VideoView
 import resources_rc
 
 class Ui_main_window(object):
@@ -67,6 +69,11 @@ class Ui_main_window(object):
 
         self.hbl_video = QHBoxLayout()
         self.hbl_video.setObjectName(u"hbl_video")
+        self.gv_video = VideoView(self.central_widget)
+        self.gv_video.setObjectName(u"gv_video")
+
+        self.hbl_video.addWidget(self.gv_video)
+
 
         self.centralLayout.addLayout(self.hbl_video)
 

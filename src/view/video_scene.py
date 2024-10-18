@@ -1,26 +1,26 @@
 import numpy as np
 from typing import Tuple, List
 
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox
-from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF
+from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox,
+                               QLineEdit, QWidget)
+from PySide6.QtGui import QPixmap, QImage, QKeyEvent
+from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt
 
-from src.model.models import ParticlePositions, GraphicItems, OperationMode
+from src.model.models import GraphicItems, OperationMode
 from src.settings.settings import Settings
+from src.util.common_util import split_indexes_text
 
 
 class VideoScene(QGraphicsScene):
-    def __init__(self, parent=None, settings: Settings = None):
+    def __init__(self, parent: QWidget = None, settings: Settings = None):
         super().__init__(parent)
         self.settings = settings
         # 当前操作模式
         self.mode = OperationMode.MOVE
         # 用base64存储图像数据，用QImage或者QPixmap存储内存占用过大
         self.frames_base64 = {}
-        # 粒子位置原始数据
-        self.particle_data = ParticlePositions()
         # GraphicItem存储容器
-        self.graphic_items = GraphicItems(self.particle_data, self.settings)
+        self.graphic_items = GraphicItems(self.settings)
         # 当前添加到QGraphicsScene中的粒子Item
         self.particle_items = []
         # 当前添加到QGraphicsScene中的轨迹Item
@@ -51,8 +51,8 @@ class VideoScene(QGraphicsScene):
         """
         self.current_frame_index = index
         self.change_frame_display(index)
-        self.change_particle_display(index)
-        self.change_trajectory_display(index)
+        self.__change_particle_display(index)
+        self.__change_trajectory_display(index)
 
     def change_frame_display(self, index: int) -> None:
         """
@@ -66,7 +66,7 @@ class VideoScene(QGraphicsScene):
             img.loadFromData(QByteArray.fromBase64(byte_arr))
             self.current_frame_item.setPixmap(QPixmap.fromImage(img))
 
-    def change_particle_display(self, index: int) -> None:
+    def __change_particle_display(self, index: int) -> None:
         """
         切换粒子显示
         :param index: 帧ID
@@ -77,7 +77,7 @@ class VideoScene(QGraphicsScene):
         for item in self.particle_items:
             self.addItem(item)
 
-    def change_trajectory_display(self, index: int) -> None:
+    def __change_trajectory_display(self, index: int) -> None:
         """
         切换轨迹显示
         :param index: 帧ID
@@ -97,9 +97,23 @@ class VideoScene(QGraphicsScene):
         """
         print(frame_index, particles)
         particle_map = {p[0]: p[1] for p in particles}
-        self.particle_data.add_frame_particles(frame_index, particle_map)
-        self.graphic_items.generate_particle_items(frame_index)
-        self.graphic_items.generate_trajectory_items(frame_index)
+        self.graphic_items.add_frame_particles(frame_index, particle_map)
+
+    def combine_particles(self) -> None:
+        """
+        合并粒子
+        """
+        items = self.selectedItems()
+        if len(items) == 0:
+            text, ok = QInputDialog.getText(None, "输入", "待合并的粒子编号(,或者空格分隔)", QLineEdit.EchoMode.Normal)
+            if ok:
+                indexes = split_indexes_text(text)
+                self.graphic_items.combine_particles(indexes)
+                self.change_display(self.current_frame_index)
+        else:
+            indexes = {i.index for i in items}
+            self.graphic_items.combine_particles(indexes)
+            self.change_display(self.current_frame_index)
 
     def img_to_base64(self, img: QImage) -> bytes:
         """
@@ -124,35 +138,58 @@ class VideoScene(QGraphicsScene):
         self.trajectory_items.clear()
         self.clear()
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
+    def update_mode(self, mode: OperationMode) -> None:
+        """
+        更新当前模式 MOVE/ADD/CROP
+        :param mode: OperationMode
+        """
+        self.mode = mode
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """
+        鼠标按下事件
+        :param event: QGraphicsSceneMouseEvent
+        """
         self.mouse_press_pos = event.scenePos()
         if self.mode == OperationMode.ADD:
+            # 添加模式
             if self.current_frame_index in self.frames_base64:
                 scene_pos = event.scenePos().toPoint()
-                index, ok = QInputDialog.getInt(self, '输入', '粒子编号', 1)
+                index, ok = QInputDialog.getInt(None, '输入', '粒子编号', 1)
                 if ok:
-                    self.particle_data.add_particle(self.current_frame_index, index, (scene_pos.x(), scene_pos.y()))
-                    self.update_frame_item(self.current_frame_index)
+                    self.graphic_items.add_particle(self.current_frame_index, index, (scene_pos.x(), scene_pos.y()))
                     self.change_display(self.current_frame_index)
             else:
                 QMessageBox.information(self, '提示', f'未加载视频')
         super(VideoScene, self).mousePressEvent(event)
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """
+        鼠标松开事件
+        :param event: QGraphicsSceneMouseEvent
+        """
         pos = event.scenePos()
+        # 移动距离
         moved = pos - self.mouse_press_pos
+        # 如果有移动距离，并且有所选对象，进行移动
         if moved.manhattanLength() > 0:
             if len(self.selectedItems()) > 0:
-                for item in self.selectedItems():
-                    index = item.index
-                    next_frame = self.particle_data.move_particle_by(self.current_frame_index, index,
-                                                                     (moved.x(), moved.y()))
-                    if next_frame:
-                        self.update_frame_item(next_frame)
-                self.update_frame_item(self.current_frame_index)
+                # 所有选中的粒子ID
+                particle_ids = {item.index for item in self.selectedItems()}
+                self.graphic_items.move_particles_by(self.current_frame_index, particle_ids, (moved.x(), moved.y()))
                 self.change_display(self.current_frame_index)
         super(VideoScene, self).mouseReleaseEvent(event)
 
-    def update_frame_item(self, frame_index: int):
-        self.graphic_items.generate_particle_items(frame_index)
-        self.graphic_items.generate_trajectory_items(frame_index)
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        """
+        键盘事件
+        :param event: QKeyEvent
+        """
+        if event.key() == Qt.Key.Key_Delete:
+            # 按下删除键
+            if len(self.selectedItems()) > 0:
+                # 所有选中的粒子ID
+                particle_ids = {item.index for item in self.selectedItems()}
+                self.graphic_items.remove_particles(self.current_frame_index, particle_ids)
+                self.change_display(self.current_frame_index)
+        super(VideoScene, self).keyPressEvent(event)

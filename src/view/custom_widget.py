@@ -9,6 +9,20 @@ from PySide6.QtWidgets import (QLabel, QWidget, QHBoxLayout, QListView, QSizePol
 from src.settings.default_settings import *
 from src.settings.settings import Settings
 from src.util.graphic_util import SettingWidgetHelper
+from src.ui.view_btn_grp_ui import Ui_wid_button_group
+
+
+class ViewButtonGroup(QWidget):
+    def __init__(self, parent=None):
+        """
+        VideoView容器中的固定按钮组
+        """
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.ui = Ui_wid_button_group()
+        self.ui.setupUi(self)
+        self.resize(36, 260)
 
 
 class ColorLabel(QLabel):

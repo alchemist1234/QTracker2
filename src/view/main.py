@@ -4,21 +4,9 @@ from PySide6.QtCore import Signal, Slot, QThread, Qt
 
 from src.view.setting import *
 from src.worker import VideoLoader, Analyzer
-from src.view.video_view import VideoView
 from src.view.video_scene import VideoScene
 from src.ui.main_ui import Ui_main_window
-from src.ui.view_btn_grp_ui import Ui_wid_button_group
-from src.model.models import VideoMetaInfo
-
-
-class ViewButtonGroup(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.ui = Ui_wid_button_group()
-        self.ui.setupUi(self)
-        self.resize(36, 260)
+from src.model.models import VideoMetaInfo, OperationMode
 
 
 class MainWindow(QMainWindow):
@@ -34,10 +22,8 @@ class MainWindow(QMainWindow):
         self.resize(settings.int_value(main_width), settings.int_value(main_height))
         self.setting_dialog = SettingDialog(settings)
         # 设置Graphics相关组件
-        self.view = VideoView()
-        self.scene = VideoScene(self.view, self.settings)
-
-        self.setup_graphics()
+        self.scene = VideoScene(self, self.settings)
+        self.ui.gv_video.setScene(self.scene)
 
         # 视频加载线程
         self.video_loader_thread = QThread()
@@ -59,15 +45,6 @@ class MainWindow(QMainWindow):
         # TODO 是否可以在需要时开启和关闭
         self.video_loader_thread.start()
         self.analyzer_thread.start()
-
-    def setup_graphics(self) -> None:
-        """
-        设置图像显示控件
-        """
-        self.view.setScene(self.scene)
-        self.ui.hbl_video.addWidget(self.view)
-        self.ui.view_btn_grp = ViewButtonGroup()
-        self.view.add_fixed_widget(self.ui.view_btn_grp, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
     def setup_connects(self) -> None:
         """
@@ -94,6 +71,11 @@ class MainWindow(QMainWindow):
         self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
         self.analyzer.sig_frame_analyzed.connect(self.scene.add_frame_particles)
         self.analyzer_thread.started.connect(self.analyzer.run)
+        # view
+        self.ui.gv_video.btn_group.ui.btn_add.clicked.connect(lambda btn: self.scene.update_mode(OperationMode.ADD))
+        self.ui.gv_video.btn_group.ui.btn_move.clicked.connect(lambda btn: self.scene.update_mode(OperationMode.MOVE))
+        self.ui.gv_video.btn_group.ui.btn_crop.clicked.connect(lambda btn: self.scene.update_mode(OperationMode.CROP))
+        self.ui.gv_video.btn_group.ui.btn_combine.clicked.connect(self.scene.combine_particles)
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):

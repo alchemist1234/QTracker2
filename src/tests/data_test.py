@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
     t1 = time.time()
     for i in range(total_frames):
-        graphic_items.generate_particle_items(i)
-        graphic_items.generate_trajectory_items(i)
+        graphic_items.__update_particle_items(i)
+        graphic_items.__update_trajectory_items(i)
     t2 = time.time()
     print(t2 - t1)
     print('finish')

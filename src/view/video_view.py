@@ -2,11 +2,15 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt, QPoint, Slot
 from PySide6.QtGui import QWheelEvent
 
+from src.view.custom_widget import ViewButtonGroup
+
 
 class VideoView(QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.fixed_widgets = {}
+        self.btn_group = ViewButtonGroup(self)
+        self.add_fixed_widget(self.btn_group, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         # 滚动条滑动没有对应事件，通过值改变信号连接
         self.horizontalScrollBar().valueChanged.connect(self._update_fixed_widgets)
         self.verticalScrollBar().valueChanged.connect(self._update_fixed_widgets)
