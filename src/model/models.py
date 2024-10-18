@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from typing import Tuple, Any, Dict, Set, List, Collection, Optional
+from typing import Tuple, Any, Dict, List, Collection, Optional
 from enum import Enum
 
-from src.view.custom_widget import ParticleItem, MarkItem, TrajectoryItem
+from src.view.custom_widget import TrajectoryItem, ParticleGroup
 from src.settings.settings import Settings
+from src.settings.default_settings import index_filter
 
 
 class OperationMode(Enum):
@@ -188,14 +189,12 @@ class GraphicItems(object):
         :param settings: 配置信息
         """
         self.particle_positions = ParticlePositions()
-        self.settings = settings
-        # {帧ID: {粒子ID: 粒子Item, ...}, ...}
-        self.particle_items = {}
-        # {帧ID: {粒子ID: 标记Item, ...}, ...}
-        self.mark_items = {}
+        self.settings: Settings = settings
+        # {帧ID: {粒子ID: 粒子Group, ...}, ...}
+        self.particle_group: Dict[int, Dict[int, ParticleGroup]] = {}
         # {帧ID: {粒子ID: 轨迹Item, ...}, ...}
         # 每帧轨迹ID只保存当前帧新增轨迹，显示时需要把小于等于当前帧所有轨迹Item全部展示
-        self.trajectory_items = {}
+        self.trajectory_items: Dict[int, Dict[int, TrajectoryItem]] = {}
 
     def add_particle(self, frame_index: int, particle_id: int, pos: Tuple[int, int]) -> None:
         """
@@ -301,19 +300,13 @@ class GraphicItems(object):
         :param frame_index: 帧ID
         """
         frame_particles = self.particle_positions.get_frame_particles(frame_index)
-        if frame_index in self.particle_items:
-            del self.particle_items[frame_index]
-        if frame_index in self.mark_items:
-            del self.mark_items[frame_index]
-        frame_particle_items = {}
-        frame_mark_items = {}
+        if frame_index in self.particle_group:
+            del self.particle_group[frame_index]
+        frame_particle_group = {}
         for particle_id, pos in frame_particles.items():
-            frame_particle_items[particle_id] = ParticleItem(self.settings, particle_id, pos[0], pos[1])
-            # TODO 调用QGraphicsSimpleTextItem的setText方法会导致程序异常退出，怀疑是PySide版本问题，暂时屏蔽
-            # frame_mark_items[particle_id] = MarkItem(self.settings, particle_id, pos[0], pos[1])
+            frame_particle_group[particle_id] = ParticleGroup(self.settings, particle_id, pos[0], pos[1])
 
-        self.particle_items[frame_index] = frame_particle_items
-        self.mark_items[frame_index] = frame_mark_items
+        self.particle_group[frame_index] = frame_particle_group
 
     def __update_trajectory_items(self, frame_index: int) -> None:
         """
@@ -333,14 +326,16 @@ class GraphicItems(object):
                                                                  end_pos[0], end_pos[1])
         self.trajectory_items[frame_index] = frame_trajectory_items
 
-    def get_particle_items(self, frame_index: int) -> List[ParticleItem]:
+    def get_particle_items(self, frame_index: int) -> List[ParticleGroup]:
         """
         返回一帧所有粒子Item对象列表
         :param frame_index: 帧ID
         :return: 粒子Item对象列表
         """
-        if frame_index in self.particle_items:
-            return list(self.particle_items[frame_index].values())
+        if frame_index in self.particle_group:
+            filtered_particles = self.settings.list_value(index_filter)
+            return [item for particle_id, item in self.particle_group[frame_index].items()
+                    if particle_id in filtered_particles or not filtered_particles]
         return []
 
     def get_trajectory_items(self, frame_index: int) -> List[TrajectoryItem]:
@@ -349,14 +344,14 @@ class GraphicItems(object):
         :param frame_index: 帧ID
         :return: 轨迹Item对象列表
         """
+        filtered_particles = self.settings.list_value(index_filter)
         return [item for f_index, item_dict in self.trajectory_items.items() if f_index <= frame_index
-                for item in item_dict.values()]
+                for particle_id, item in item_dict.items()
+                if particle_id in filtered_particles or not filtered_particles]
 
     def clear(self) -> None:
         """
         清空数据
         """
         self.particle_positions.clear()
-        self.particle_items.clear()
-        self.mark_items.clear()
         self.trajectory_items.clear()

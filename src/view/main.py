@@ -72,10 +72,14 @@ class MainWindow(QMainWindow):
         self.analyzer.sig_frame_analyzed.connect(self.scene.add_frame_particles)
         self.analyzer_thread.started.connect(self.analyzer.run)
         # view
-        self.ui.gv_video.btn_group.ui.btn_add.clicked.connect(lambda btn: self.scene.update_mode(OperationMode.ADD))
-        self.ui.gv_video.btn_group.ui.btn_move.clicked.connect(lambda btn: self.scene.update_mode(OperationMode.MOVE))
-        self.ui.gv_video.btn_group.ui.btn_crop.clicked.connect(lambda btn: self.scene.update_mode(OperationMode.CROP))
+        self.ui.gv_video.btn_group.ui.btn_add.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.ADD))
+        self.ui.gv_video.btn_group.ui.btn_move.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.MOVE))
+        self.ui.gv_video.btn_group.ui.btn_crop.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.CROP))
         self.ui.gv_video.btn_group.ui.btn_combine.clicked.connect(self.scene.combine_particles)
+        self.ui.gv_video.btn_group.ui.btn_show_particle.clicked.connect(self.scene.set_particle_visible)
+        self.ui.gv_video.btn_group.ui.btn_show_mark.clicked.connect(self.scene.set_mark_visible)
+        self.ui.gv_video.btn_group.ui.btn_show_trajectory.clicked.connect(self.scene.set_trajectory_visible)
+        self.ui.le_filter.textChanged.connect(self.scene.set_filter)
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):

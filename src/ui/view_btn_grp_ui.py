@@ -105,6 +105,7 @@ class Ui_wid_button_group(object):
         self.btn_show_particle.setIcon(icon4)
         self.btn_show_particle.setIconSize(QSize(16, 20))
         self.btn_show_particle.setCheckable(True)
+        self.btn_show_particle.setChecked(True)
 
         self.vboxLayout.addWidget(self.btn_show_particle)
 
@@ -117,6 +118,7 @@ class Ui_wid_button_group(object):
         self.btn_show_mark.setIcon(icon5)
         self.btn_show_mark.setIconSize(QSize(16, 20))
         self.btn_show_mark.setCheckable(True)
+        self.btn_show_mark.setChecked(True)
 
         self.vboxLayout.addWidget(self.btn_show_mark)
 
@@ -129,6 +131,7 @@ class Ui_wid_button_group(object):
         self.btn_show_trajectory.setIcon(icon6)
         self.btn_show_trajectory.setIconSize(QSize(16, 20))
         self.btn_show_trajectory.setCheckable(True)
+        self.btn_show_trajectory.setChecked(True)
 
         self.vboxLayout.addWidget(self.btn_show_trajectory)
 

@@ -208,14 +208,18 @@ class ParticleGroup(QGraphicsItemGroup):
         self.index = index
         self.setX(x)
         self.setY(y)
-        if self.setting_helper.visible(show_particle, index):
-            self.particle = ParticleItem(settings, index, x, y)
-            self.addToGroup(self.particle)
-        if self.setting_helper.visible(show_mark, index):
-            self.mark = MarkItem(settings, index, x, y)
-            self.addToGroup(self.mark)
+        self.particle = ParticleItem(settings, index, x, y)
+        self.addToGroup(self.particle)
+        self.mark = MarkItem(settings, index, x, y)
+        self.addToGroup(self.mark)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+
+    def particle_visible(self, visible: bool):
+        self.particle.setVisible(visible)
+
+    def mark_visible(self, visible: bool):
+        self.mark.setVisible(visible)
 
 
 class TrajectoryItem(QGraphicsLineItem):

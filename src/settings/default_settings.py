@@ -14,6 +14,8 @@ class SettingItem:
     section: str
     key: str
     default_value: Any
+    # TODO 还未想好怎么实现
+    save_to_file: bool = True
 
 
 main_width = SettingItem(section='main', key='width', default_value=800)
@@ -48,15 +50,15 @@ frame_quality = SettingItem(section='analyze', key='frame_quality', default_valu
 
 particle_color = SettingItem(section='display', key='particle_color', default_value=QColor(0, 255, 0))
 particle_size = SettingItem(section='display', key='particle_size', default_value=4)
-show_particle = SettingItem(section='display', key='show_particle', default_value=True)
+show_particle = SettingItem(section='display', key='show_particle', default_value=True, save_to_file=False)
 mark_color = SettingItem(section='display', key='mark_color', default_value=QColor(255, 0, 0))
 mark_size = SettingItem(section='display', key='mark_size', default_value=4)
 mark_font = SettingItem(section='display', key='mark_font', default_value=QFont('SimHei'))
-show_mark = SettingItem(section='display', key='show_mark', default_value=True)
+show_mark = SettingItem(section='display', key='show_mark', default_value=True, save_to_file=False)
 same_mark_color_with_particle = SettingItem(section='display', key='same_mark_color_with_particle', default_value=False)
 trajectory_color = SettingItem(section='display', key='trajectory_color', default_value=QColor(0, 0, 255))
 trajectory_width = SettingItem(section='display', key='trajectory_size', default_value=2)
-show_trajectory = SettingItem(section='display', key='show_trajectory', default_value=True)
+show_trajectory = SettingItem(section='display', key='show_trajectory', default_value=True, save_to_file=False)
 same_trajectory_color_with_particle = SettingItem(section='display', key='same_trajectory_color_with_particle',
                                                   default_value=False)
-index_filter = SettingItem(section='display', key='index_filter', default_value=[])
+index_filter = SettingItem(section='display', key='index_filter', default_value=[], save_to_file=False)

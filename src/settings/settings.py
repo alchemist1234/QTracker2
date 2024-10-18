@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from PySide6.QtCore import QSettings
 
 from src.settings.default_settings import *
@@ -13,6 +15,13 @@ class Settings(object):
         self.settings = QSettings(setting_path, QSettings.Format.IniFormat)
         self.settings.setFallbacksEnabled(False)
         self.set_value(index_filter, [])
+        self.set_value(show_particle, True)
+        self.set_value(show_mark, True)
+        self.set_value(show_particle, True)
+
+    def init_value(self):
+        # TODO 可通过SettingItem的save_to_file字段进行参数初始化，但需要考虑用什么方式实现，目前先把需要重置的参数写死
+        pass
 
     def int_value(self, item: SettingItem) -> int:
         """
@@ -46,7 +55,11 @@ class Settings(object):
         :return: list类型配置值
         """
         value = self.value(item)
-        return value if isinstance(value, list) else [value]
+        # 如果是字符串，不把字符开成list
+        if isinstance(value, str):
+            return [value]
+        # 其他可迭代对象，转成list
+        return list(value) if isinstance(value, Iterable) else [value]
 
     def str_value(self, item: SettingItem) -> str:
         """

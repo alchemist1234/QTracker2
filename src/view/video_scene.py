@@ -7,6 +7,7 @@ from PySide6.QtGui import QPixmap, QImage, QKeyEvent
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt
 
 from src.model.models import GraphicItems, OperationMode
+from src.settings.default_settings import show_particle, show_mark, show_trajectory, index_filter
 from src.settings.settings import Settings
 from src.util.common_util import split_indexes_text
 
@@ -51,8 +52,8 @@ class VideoScene(QGraphicsScene):
         """
         self.current_frame_index = index
         self.change_frame_display(index)
-        self.__change_particle_display(index)
         self.__change_trajectory_display(index)
+        self.__change_particle_display(index)
 
     def change_frame_display(self, index: int) -> None:
         """
@@ -66,26 +67,32 @@ class VideoScene(QGraphicsScene):
             img.loadFromData(QByteArray.fromBase64(byte_arr))
             self.current_frame_item.setPixmap(QPixmap.fromImage(img))
 
-    def __change_particle_display(self, index: int) -> None:
+    def __change_particle_display(self, frame_index: int) -> None:
         """
         切换粒子显示
-        :param index: 帧ID
+        :param frame_index: 帧ID
         """
         for item in self.particle_items:
             self.removeItem(item)
-        self.particle_items = self.graphic_items.get_particle_items(index)
+        # 设置显示/隐藏
+        particle_shown = self.settings.boolean_value(show_particle)
+        mark_shown = self.settings.boolean_value(show_mark)
+        self.particle_items = self.graphic_items.get_particle_items(frame_index)
         for item in self.particle_items:
+            item.particle_visible(particle_shown)
+            item.mark_visible(mark_shown)
             self.addItem(item)
 
-    def __change_trajectory_display(self, index: int) -> None:
+    def __change_trajectory_display(self, frame_index: int) -> None:
         """
         切换轨迹显示
-        :param index: 帧ID
+        :param frame_index: 帧ID
         """
         for item in self.trajectory_items:
             self.removeItem(item)
-        self.trajectory_items = self.graphic_items.get_trajectory_items(index)
+        self.trajectory_items = self.graphic_items.get_trajectory_items(frame_index)
         for item in self.trajectory_items:
+            item.setVisible(self.settings.boolean_value(show_trajectory))
             self.addItem(item)
 
     @Slot(int, list)
@@ -114,6 +121,41 @@ class VideoScene(QGraphicsScene):
             indexes = {i.index for i in items}
             self.graphic_items.combine_particles(indexes)
             self.change_display(self.current_frame_index)
+
+    def set_particle_visible(self, show: bool) -> None:
+        """
+        是否显示粒子
+        :param show: 是否显示
+        """
+        self.settings.set_value(show_particle, show)
+        self.change_display(self.current_frame_index)
+
+    def set_mark_visible(self, show: bool) -> None:
+        """
+        是否显示标记
+        :param show: 是否显示
+        """
+        self.settings.set_value(show_mark, show)
+        self.change_display(self.current_frame_index)
+
+    def set_trajectory_visible(self, show: bool) -> None:
+        """
+        是否显示轨迹
+        :param show: 是否显示
+        """
+        self.settings.set_value(show_trajectory, show)
+        self.change_display(self.current_frame_index)
+
+    def set_filter(self, filter_str: str) -> None:
+        """
+        过滤粒子显示
+        :param filter_str: 过滤字符串, 支持"-"进行范围过滤，多个粒子可以使用","或者" "分割
+        """
+        print(f'filter string: {filter_str}')
+        indexes = split_indexes_text(filter_str)
+        print(f'filter list: {indexes}')
+        self.settings.set_value(index_filter, indexes)
+        self.change_display(self.current_frame_index)
 
     def img_to_base64(self, img: QImage) -> bytes:
         """
