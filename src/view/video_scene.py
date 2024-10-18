@@ -43,7 +43,7 @@ class VideoScene(QGraphicsScene):
         """
         h, w, c = frame.shape
         img = QImage(frame.data, w, h, QImage.Format.Format_RGB888)
-        self.frames_base64[index] = self.img_to_base64(img)
+        self.frames_base64[index] = self.__img_to_base64(img)
 
     @Slot(int)
     def change_display(self, index: int) -> None:
@@ -51,11 +51,21 @@ class VideoScene(QGraphicsScene):
         切换帧显示
         """
         self.current_frame_index = index
-        self.change_frame_display(index)
+        self.__change_frame_display(index)
         self.__change_trajectory_display(index)
         self.__change_particle_display(index)
 
-    def change_frame_display(self, index: int) -> None:
+    @Slot()
+    def change_to_next_frame(self) -> None:
+        """
+        切换到下一帧
+        """
+        next_frame = self.current_frame_index + 1
+        if next_frame not in self.frames_base64:
+            next_frame = 0
+        self.change_display(next_frame)
+
+    def __change_frame_display(self, index: int) -> None:
         """
         切换图像显示
         :param index: 帧ID
@@ -106,6 +116,7 @@ class VideoScene(QGraphicsScene):
         particle_map = {p[0]: p[1] for p in particles}
         self.graphic_items.add_frame_particles(frame_index, particle_map)
 
+    @Slot()
     def combine_particles(self) -> None:
         """
         合并粒子
@@ -122,6 +133,7 @@ class VideoScene(QGraphicsScene):
             self.graphic_items.combine_particles(indexes)
             self.change_display(self.current_frame_index)
 
+    @Slot(bool)
     def set_particle_visible(self, show: bool) -> None:
         """
         是否显示粒子
@@ -130,6 +142,7 @@ class VideoScene(QGraphicsScene):
         self.settings.set_value(show_particle, show)
         self.change_display(self.current_frame_index)
 
+    @Slot(bool)
     def set_mark_visible(self, show: bool) -> None:
         """
         是否显示标记
@@ -138,6 +151,7 @@ class VideoScene(QGraphicsScene):
         self.settings.set_value(show_mark, show)
         self.change_display(self.current_frame_index)
 
+    @Slot(bool)
     def set_trajectory_visible(self, show: bool) -> None:
         """
         是否显示轨迹
@@ -146,6 +160,7 @@ class VideoScene(QGraphicsScene):
         self.settings.set_value(show_trajectory, show)
         self.change_display(self.current_frame_index)
 
+    @Slot(str)
     def set_filter(self, filter_str: str) -> None:
         """
         过滤粒子显示
@@ -157,7 +172,7 @@ class VideoScene(QGraphicsScene):
         self.settings.set_value(index_filter, indexes)
         self.change_display(self.current_frame_index)
 
-    def img_to_base64(self, img: QImage) -> bytes:
+    def __img_to_base64(self, img: QImage) -> bytes:
         """
         QImage 转 Base64
         :param img: QImage
@@ -180,6 +195,7 @@ class VideoScene(QGraphicsScene):
         self.trajectory_items.clear()
         self.clear()
 
+    @Slot(OperationMode)
     def update_mode(self, mode: OperationMode) -> None:
         """
         更新当前模式 MOVE/ADD/CROP

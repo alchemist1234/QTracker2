@@ -1,6 +1,6 @@
 import numpy as np
 from PySide6.QtWidgets import *
-from PySide6.QtCore import Signal, Slot, QThread, Qt
+from PySide6.QtCore import Signal, QThread, QTimer
 
 from src.view.setting import *
 from src.worker import VideoLoader, Analyzer
@@ -34,6 +34,9 @@ class MainWindow(QMainWindow):
         self.analyzer_thread = QThread()
         self.analyzer = Analyzer(settings)
         self.analyzer.moveToThread(self.analyzer_thread)
+
+        self.play_timer = QTimer(self)
+        self.playing = False
 
         # 设置信息/槽连接
         self.setup_connects()
@@ -71,10 +74,14 @@ class MainWindow(QMainWindow):
         self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
         self.analyzer.sig_frame_analyzed.connect(self.scene.add_frame_particles)
         self.analyzer_thread.started.connect(self.analyzer.run)
+        self.ui.btn_play.clicked.connect(self.play_video)
+        self.play_timer.timeout.connect(self.scene.change_to_next_frame)
         # view
         self.ui.gv_video.btn_group.ui.btn_add.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.ADD))
-        self.ui.gv_video.btn_group.ui.btn_move.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.MOVE))
-        self.ui.gv_video.btn_group.ui.btn_crop.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.CROP))
+        self.ui.gv_video.btn_group.ui.btn_move.clicked.connect(
+            lambda checked: self.scene.update_mode(OperationMode.MOVE))
+        self.ui.gv_video.btn_group.ui.btn_crop.clicked.connect(
+            lambda checked: self.scene.update_mode(OperationMode.CROP))
         self.ui.gv_video.btn_group.ui.btn_combine.clicked.connect(self.scene.combine_particles)
         self.ui.gv_video.btn_group.ui.btn_show_particle.clicked.connect(self.scene.set_particle_visible)
         self.ui.gv_video.btn_group.ui.btn_show_mark.clicked.connect(self.scene.set_mark_visible)
@@ -150,6 +157,7 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def update_slider_value(self, value: int) -> None:
+        # TODO 改成从scene的change_frame发起信号连接本函数
         """
         更新进度条
         :param value: 进度条值
@@ -160,11 +168,30 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def update_lcd_value(self, value: int) -> None:
+        # TODO 改成从scene的change_frame发起信号连接本函数
         """
         更新LCD值
         :param value:
         """
         self.ui.lcd_frame.display(f'{value}-{self.video_meta.frame_count}')
+
+    @Slot()
+    def play_video(self) -> None:
+        # TODO 图标切换
+        """
+        播放视频
+        """
+        if self.playing:
+            # 停止播放
+            self.play_timer.stop()
+            self.playing = False
+        else:
+            # 播放
+            fps = self.video_meta.fps
+            if fps != 0:
+                self.play_timer.setInterval(int(1000 / fps))
+                self.play_timer.start()
+                self.playing = True
 
     def closeEvent(self, event) -> None:
         """

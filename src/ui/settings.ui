@@ -791,6 +791,40 @@
             </item>
            </layout>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <item>
+             <widget class="QCheckBox" name="chb_same_mark_color_with_particle">
+              <property name="text">
+               <string>与粒子颜色相同</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="lb_mark_font">
+              <property name="text">
+               <string>标记字体</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFontComboBox" name="fcb_mark_font"/>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
@@ -825,6 +859,17 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spb_trajectory_width"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_15">
+            <item>
+             <widget class="QCheckBox" name="chb_same_trajectory_color_with_particle">
+              <property name="text">
+               <string>与粒子颜色相同</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>

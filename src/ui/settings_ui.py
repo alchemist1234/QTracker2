@@ -16,9 +16,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QDialog,
-    QDialogButtonBox, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QSizePolicy, QSpacerItem, QSpinBox,
-    QTabWidget, QVBoxLayout, QWidget)
+    QDialogButtonBox, QFontComboBox, QGroupBox, QHBoxLayout,
+    QLabel, QLayout, QSizePolicy, QSpacerItem,
+    QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from src.view.custom_widget import ColorLabel
 
@@ -496,6 +496,30 @@ class Ui_Dialog(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_12)
 
+        self.horizontalLayout_14 = QHBoxLayout()
+        self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
+        self.chb_same_mark_color_with_particle = QCheckBox(self.groupBox_7)
+        self.chb_same_mark_color_with_particle.setObjectName(u"chb_same_mark_color_with_particle")
+
+        self.horizontalLayout_14.addWidget(self.chb_same_mark_color_with_particle)
+
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_14.addItem(self.horizontalSpacer_8)
+
+        self.lb_mark_font = QLabel(self.groupBox_7)
+        self.lb_mark_font.setObjectName(u"lb_mark_font")
+
+        self.horizontalLayout_14.addWidget(self.lb_mark_font)
+
+        self.fcb_mark_font = QFontComboBox(self.groupBox_7)
+        self.fcb_mark_font.setObjectName(u"fcb_mark_font")
+
+        self.horizontalLayout_14.addWidget(self.fcb_mark_font)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_14)
+
 
         self.verticalLayout7.addWidget(self.groupBox_7)
 
@@ -527,6 +551,16 @@ class Ui_Dialog(object):
 
 
         self.verticalLayout_4.addLayout(self.horizontalLayout_13)
+
+        self.horizontalLayout_15 = QHBoxLayout()
+        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
+        self.chb_same_trajectory_color_with_particle = QCheckBox(self.groupBox_8)
+        self.chb_same_trajectory_color_with_particle.setObjectName(u"chb_same_trajectory_color_with_particle")
+
+        self.horizontalLayout_15.addWidget(self.chb_same_trajectory_color_with_particle)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_15)
 
 
         self.verticalLayout7.addWidget(self.groupBox_8)
@@ -589,10 +623,13 @@ class Ui_Dialog(object):
         self.lb_mark_color.setText(QCoreApplication.translate("Dialog", u"\u6807\u8bb0\u989c\u8272", None))
         self.lb_mark_color_display.setText("")
         self.lb_mark_size.setText(QCoreApplication.translate("Dialog", u"\u6807\u8bb0\u5927\u5c0f", None))
+        self.chb_same_mark_color_with_particle.setText(QCoreApplication.translate("Dialog", u"\u4e0e\u7c92\u5b50\u989c\u8272\u76f8\u540c", None))
+        self.lb_mark_font.setText(QCoreApplication.translate("Dialog", u"\u6807\u8bb0\u5b57\u4f53", None))
         self.groupBox_8.setTitle(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9", None))
         self.lb_trajectory_color.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u989c\u8272", None))
         self.lb_trajectory_color_display.setText("")
         self.lb_trajectory_width.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u5bbd\u5ea6", None))
+        self.chb_same_trajectory_color_with_particle.setText(QCoreApplication.translate("Dialog", u"\u4e0e\u7c92\u5b50\u989c\u8272\u76f8\u540c", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_display), QCoreApplication.translate("Dialog", u"\u663e\u793a", None))
     # retranslateUi
 

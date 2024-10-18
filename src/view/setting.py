@@ -1,7 +1,7 @@
 from typing import List
 
 from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Qt
 
 from src.ui.settings_ui import Ui_Dialog
 from src.settings.settings import Settings
@@ -34,8 +34,31 @@ class SettingDialog(QDialog):
         self.ui.lb_mark_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_mark_color_display))
         self.ui.lb_trajectory_color_display.clicked.connect(
             lambda x: self.edit_colors(self.ui.lb_trajectory_color_display))
+        self.ui.chb_same_mark_color_with_particle.checkStateChanged.connect(self.mark_color_state)
+        self.ui.chb_same_trajectory_color_with_particle.checkStateChanged.connect(self.trajectory_color_state)
 
-    def edit_colors(self, label: ColorLabel):
+    @Slot(Qt.CheckState)
+    def mark_color_state(self, state: Qt.CheckState) -> None:
+        """
+        启用/禁用MarkColor
+        :param state: 与粒子相同颜色复选框状态
+        """
+        self.ui.lb_mark_color_display.setEnabled(state != Qt.CheckState.Checked)
+
+    @Slot(Qt.CheckState)
+    def trajectory_color_state(self, state: Qt.CheckState) -> None:
+        """
+        启用/禁用TrajectoryColor
+        :param state: 与粒子相同颜色复选框状态
+        """
+        self.ui.lb_trajectory_color_display.setEnabled(state != Qt.CheckState.Checked)
+
+    @Slot(ColorLabel)
+    def edit_colors(self, label: ColorLabel) -> None:
+        """
+        打开颜色编辑窗
+        :param label: 颜色标签
+        """
         editor = ColorEditor(self, label)
         editor.add_colors(label.colors)
         editor.sig_color_changed.connect(self.update_color)
@@ -81,8 +104,12 @@ class SettingDialog(QDialog):
         self.ui.spb_particle_size.setValue(self.settings.int_value(particle_size))
         self.ui.lb_mark_color_display.set_color(self.settings.value(mark_color))
         self.ui.spb_mark_size.setValue(self.settings.int_value(mark_size))
+        self.ui.fcb_mark_font.setCurrentFont(self.settings.value(mark_font))
+        self.ui.chb_same_mark_color_with_particle.setChecked(self.settings.boolean_value(same_mark_color_with_particle))
         self.ui.lb_trajectory_color_display.set_color(self.settings.value(trajectory_color))
         self.ui.spb_trajectory_width.setValue(self.settings.int_value(trajectory_width))
+        self.ui.chb_same_trajectory_color_with_particle.setChecked(
+            self.settings.boolean_value(same_trajectory_color_with_particle))
 
     def save_settings(self) -> None:
         """
@@ -117,7 +144,11 @@ class SettingDialog(QDialog):
         self.settings.set_value(particle_size, self.ui.spb_particle_size.value())
         self.settings.set_value(mark_color, self.ui.lb_mark_color_display.colors)
         self.settings.set_value(mark_size, self.ui.spb_mark_size.value())
+        self.settings.set_value(mark_font, self.ui.fcb_mark_font.currentFont())
+        self.settings.set_value(same_mark_color_with_particle, self.ui.chb_same_mark_color_with_particle.isChecked())
         self.settings.set_value(trajectory_color, self.ui.lb_trajectory_color_display.colors)
         self.settings.set_value(trajectory_width, self.ui.spb_trajectory_width.value())
+        self.settings.set_value(same_trajectory_color_with_particle,
+                                self.ui.chb_same_trajectory_color_with_particle.isChecked())
 
         self.settings.sync()
