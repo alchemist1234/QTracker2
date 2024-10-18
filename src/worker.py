@@ -175,7 +175,7 @@ class Analyzer(QObject):
                 frame_particles[self.max_label] = center_tuple
                 self.history_particles[self.max_label] = HistoryParticle(frame_index, center_tuple)
                 self.max_label += 1
-            return frame_particles
+        return frame_particles
 
     def same_particle(self, old_center, new_center) -> bool:
         """

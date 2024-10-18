@@ -1,6 +1,7 @@
 import numpy as np
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Signal, QThread, QTimer
+from PySide6.QtGui import QIcon
 
 from src.view.setting import *
 from src.worker import VideoLoader, Analyzer
@@ -18,6 +19,9 @@ class MainWindow(QMainWindow):
         self.settings = settings
         self.ui = Ui_main_window()
         self.ui.setupUi(self)
+        self.icon_play = QIcon(':/icon/play')
+        self.icon_pause = QIcon(':/icon/pause')
+        # self.icon_pause.addFile(u":/icon/pause", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         # 从设置文件获取窗口大小
         self.resize(settings.int_value(main_width), settings.int_value(main_height))
         self.setting_dialog = SettingDialog(settings)
@@ -171,13 +175,12 @@ class MainWindow(QMainWindow):
         # TODO 改成从scene的change_frame发起信号连接本函数
         """
         更新LCD值
-        :param value:
+        :param value: 帧
         """
         self.ui.lcd_frame.display(f'{value}-{self.video_meta.frame_count}')
 
     @Slot()
     def play_video(self) -> None:
-        # TODO 图标切换
         """
         播放视频
         """
@@ -185,6 +188,7 @@ class MainWindow(QMainWindow):
             # 停止播放
             self.play_timer.stop()
             self.playing = False
+            self.ui.btn_play.setIcon(self.icon_play)
         else:
             # 播放
             fps = self.video_meta.fps
@@ -192,6 +196,7 @@ class MainWindow(QMainWindow):
                 self.play_timer.setInterval(int(1000 / fps))
                 self.play_timer.start()
                 self.playing = True
+                self.ui.btn_play.setIcon(self.icon_pause)
 
     def closeEvent(self, event) -> None:
         """

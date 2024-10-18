@@ -2,9 +2,9 @@ import numpy as np
 from typing import Tuple, List
 
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox,
-                               QLineEdit, QWidget)
-from PySide6.QtGui import QPixmap, QImage, QKeyEvent
-from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt
+                               QLineEdit, QWidget, QGraphicsRectItem, QGraphicsItem)
+from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants
+from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF
 
 from src.model.models import GraphicItems, OperationMode
 from src.settings.default_settings import show_particle, show_mark, show_trajectory, index_filter
@@ -15,6 +15,8 @@ from src.util.common_util import split_indexes_text
 class VideoScene(QGraphicsScene):
     def __init__(self, parent: QWidget = None, settings: Settings = None):
         super().__init__(parent)
+        # 设置图形项搜索方法
+        self.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
         self.settings = settings
         # 当前操作模式
         self.mode = OperationMode.MOVE
@@ -31,8 +33,28 @@ class VideoScene(QGraphicsScene):
         # 当前鼠标按下位置
         self.mouse_press_pos = QPointF()
 
+        # 帧图像对象
         self.current_frame_item = QGraphicsPixmapItem()
         self.addItem(self.current_frame_item)
+
+        self.crop_item: QGraphicsRectItem = self.create_crop_item()
+        self.addItem(self.crop_item)
+
+    @staticmethod
+    def create_crop_item() -> QGraphicsRectItem:
+        """
+        创建裁切边框
+        :return:
+        """
+        item = QGraphicsRectItem()
+        pen = QPen()
+        pen.setStyle(Qt.PenStyle.DashLine)
+        pen.setColor(QColorConstants.Green)
+        item.setPen(pen)
+        item.setVisible(False)
+        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        return item
 
     @Slot(int, np.ndarray)
     def add_frame(self, index: int, frame: np.ndarray) -> None:
@@ -121,15 +143,14 @@ class VideoScene(QGraphicsScene):
         """
         合并粒子
         """
-        items = self.selectedItems()
-        if len(items) == 0:
+        indexes = {item.index for item in self.selectedItems() if hasattr(item, 'index')}
+        if len(indexes) == 0:
             text, ok = QInputDialog.getText(None, "输入", "待合并的粒子编号(,或者空格分隔)", QLineEdit.EchoMode.Normal)
             if ok:
                 indexes = split_indexes_text(text)
                 self.graphic_items.combine_particles(indexes)
                 self.change_display(self.current_frame_index)
         else:
-            indexes = {i.index for i in items}
             self.graphic_items.combine_particles(indexes)
             self.change_display(self.current_frame_index)
 
@@ -166,13 +187,12 @@ class VideoScene(QGraphicsScene):
         过滤粒子显示
         :param filter_str: 过滤字符串, 支持"-"进行范围过滤，多个粒子可以使用","或者" "分割
         """
-        print(f'filter string: {filter_str}')
         indexes = split_indexes_text(filter_str)
-        print(f'filter list: {indexes}')
         self.settings.set_value(index_filter, indexes)
         self.change_display(self.current_frame_index)
 
-    def __img_to_base64(self, img: QImage) -> bytes:
+    @staticmethod
+    def __img_to_base64(img: QImage) -> bytes:
         """
         QImage 转 Base64
         :param img: QImage
@@ -219,6 +239,14 @@ class VideoScene(QGraphicsScene):
                     self.change_display(self.current_frame_index)
             else:
                 QMessageBox.information(self, '提示', f'未加载视频')
+        elif self.mode == OperationMode.CROP:
+            # 裁切模式
+            if event.buttons() == Qt.MouseButton.LeftButton:
+                self.crop_item.setRect(QRectF(event.scenePos(), event.scenePos()))
+                self.crop_item.setVisible(True)
+            if event.buttons() == Qt.MouseButton.RightButton:
+                self.crop_item.setVisible(False)
+
         super(VideoScene, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -231,12 +259,28 @@ class VideoScene(QGraphicsScene):
         moved = pos - self.mouse_press_pos
         # 如果有移动距离，并且有所选对象，进行移动
         if moved.manhattanLength() > 0:
-            if len(self.selectedItems()) > 0:
+            particle_ids = {item.index for item in self.selectedItems() if hasattr(item, 'index')}
+            if len(particle_ids) > 0:
                 # 所有选中的粒子ID
-                particle_ids = {item.index for item in self.selectedItems()}
                 self.graphic_items.move_particles_by(self.current_frame_index, particle_ids, (moved.x(), moved.y()))
                 self.change_display(self.current_frame_index)
         super(VideoScene, self).mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """
+        鼠标移动事件
+        :param event: QGraphicsSceneMouseEvent
+        """
+        if self.mode == OperationMode.CROP:
+            # 裁切模式下左键拖拽，绘制裁切框
+            if event.buttons() == Qt.MouseButton.LeftButton:
+                left = min(self.mouse_press_pos.x(), event.scenePos().x())
+                right = max(self.mouse_press_pos.x(), event.scenePos().x())
+                top = min(self.mouse_press_pos.y(), event.scenePos().y())
+                bottom = max(self.mouse_press_pos.y(), event.scenePos().y())
+                self.crop_item.setRect(QRectF(left, top, right - left, bottom - top))
+        else:
+            super(VideoScene, self).mouseMoveEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """

@@ -281,6 +281,8 @@ class GraphicItems(object):
         合并多个粒子，并更新所有涉及帧对象
         :param particle_ids: 需要合并的粒子
         """
+        if particle_ids is None or len(particle_ids) == 0:
+            return
         frame_index = self.particle_positions.combine_particles(particle_ids)
         for frame in frame_index:
             self.update_frame_items(frame)
