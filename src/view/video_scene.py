@@ -111,8 +111,8 @@ class VideoScene(QGraphicsScene):
         mark_shown = self.settings.boolean_value(show_mark)
         self.particle_items = self.graphic_items.get_particle_items(frame_index)
         for item in self.particle_items:
-            item.particle_visible(particle_shown)
-            item.mark_visible(mark_shown)
+            item.set_particle_visible(particle_shown)
+            item.set_mark_visible(mark_shown)
             self.addItem(item)
 
     def __change_trajectory_display(self, frame_index: int) -> None:
@@ -246,7 +246,6 @@ class VideoScene(QGraphicsScene):
                 self.crop_item.setVisible(True)
             if event.buttons() == Qt.MouseButton.RightButton:
                 self.crop_item.setVisible(False)
-
         super(VideoScene, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -259,11 +258,15 @@ class VideoScene(QGraphicsScene):
         moved = pos - self.mouse_press_pos
         # 如果有移动距离，并且有所选对象，进行移动
         if moved.manhattanLength() > 0:
-            particle_ids = {item.index for item in self.selectedItems() if hasattr(item, 'index')}
+            selected = self.selectedItems()
+            particle_ids = {item.index for item in selected if hasattr(item, 'index')}
             if len(particle_ids) > 0:
                 # 所有选中的粒子ID
                 self.graphic_items.move_particles_by(self.current_frame_index, particle_ids, (moved.x(), moved.y()))
-                self.change_display(self.current_frame_index)
+                self.graphic_items.update_frame_items(self.current_frame_index)
+                # 这里更新不能调用self.change_display(), 会导致selectedItems清空, 下次移动时坐标会变成(0, 0)
+                self.__change_trajectory_display(self.current_frame_index)
+
         super(VideoScene, self).mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:

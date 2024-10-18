@@ -215,10 +215,10 @@ class ParticleGroup(QGraphicsItemGroup):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
 
-    def particle_visible(self, visible: bool):
+    def set_particle_visible(self, visible: bool):
         self.particle.setVisible(visible)
 
-    def mark_visible(self, visible: bool):
+    def set_mark_visible(self, visible: bool):
         self.mark.setVisible(visible)
 
 
