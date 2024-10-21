@@ -7,7 +7,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 import cv2
 
 from src.model.models import VideoMetaInfo, HistoryParticle
-from src.settings import default_settings
+from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 
 
@@ -151,7 +151,7 @@ class Analyzer(QObject):
             new_row[0, :, 0] = center
             ordered_centers = np.append(ordered_centers, new_row, axis=0)
 
-        memory_frames = self.settings.int_value(default_settings.memory_frames)
+        memory_frames = self.settings.int_value(SettingKey.memory_frames)
         for center in ordered_centers:
             center_tuple = tuple(np.ravel(center).astype(int))
             for index, history_center in self.history_particles.items():
@@ -173,7 +173,7 @@ class Analyzer(QObject):
         :param new_center: 新位置
         :return: 是否同一粒子
         """
-        dis = self.settings.int_value(default_settings.memory_frames)
+        dis = self.settings.int_value(SettingKey.memory_frames)
         return abs(new_center[0] - old_center[0]) <= dis and abs(new_center[1] - old_center[1]) <= dis
 
     def smooth(self, frame):
@@ -182,34 +182,34 @@ class Analyzer(QObject):
         else:
             image_gray = frame
 
-        if self.settings.boolean_value(default_settings.apply_hist_eq):
+        if self.settings.boolean_value(SettingKey.apply_hist_eq):
             image_gray = cv2.equalizeHist(image_gray)
 
-        for j in range(self.settings.int_value(default_settings.adaptive_hist_eq)):
+        for j in range(self.settings.int_value(SettingKey.adaptive_hist_eq)):
             clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(8, 8))
             image_gray = clahe.apply(image_gray)
 
-        bilateral_size = self.settings.int_value(default_settings.bilateral_size)
-        bilateral_color = self.settings.int_value(default_settings.bilateral_color)
-        bilateral_space = self.settings.int_value(default_settings.bilateral_space)
+        bilateral_size = self.settings.int_value(SettingKey.bilateral_size)
+        bilateral_color = self.settings.int_value(SettingKey.bilateral_color)
+        bilateral_space = self.settings.int_value(SettingKey.bilateral_space)
         if bilateral_size != 0:
             image_gray = cv2.bilateralFilter(image_gray, bilateral_size, bilateral_color, bilateral_space)
 
-        image_gray = cv2.medianBlur(image_gray, self.settings.int_value(default_settings.median_blur))
-        image_gray = cv2.GaussianBlur(image_gray, (self.settings.int_value(default_settings.gaussian_blur),) * 2, 0)
+        image_gray = cv2.medianBlur(image_gray, self.settings.int_value(SettingKey.median_blur))
+        image_gray = cv2.GaussianBlur(image_gray, (self.settings.int_value(SettingKey.gaussian_blur),) * 2, 0)
         frame = image_gray.copy()
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
         return frame, image_gray
 
     def binary(self, image):
-        derivative_order = self.settings.int_value(default_settings.derivative_order)
+        derivative_order = self.settings.int_value(SettingKey.derivative_order)
         sobel_x = self.get_sobel(image, derivative_order, 0)
         sobel_y = self.get_sobel(image, 0, derivative_order)
         sobel_both = cv2.bitwise_or(sobel_x, sobel_y)
         return sobel_both
 
     def get_sobel(self, image, x, y):
-        kernel_size = self.settings.int_value(default_settings.kernel_size)
+        kernel_size = self.settings.int_value(SettingKey.kernel_size)
         sobel = cv2.Sobel(image, cv2.CV_64F, x, y, kernel_size)
         sobel = np.absolute(sobel)
         sobel = sobel - sobel.min()
@@ -219,9 +219,9 @@ class Analyzer(QObject):
         return sobel
 
     def morphology(self, image):
-        kernel = np.ones((self.settings.int_value(default_settings.closing_size),) * 2, np.uint8)
+        kernel = np.ones((self.settings.int_value(SettingKey.closing_size),) * 2, np.uint8)
         image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
-        kernel = np.ones((self.settings.int_value(default_settings.opening_size),) * 2, np.uint8)
+        kernel = np.ones((self.settings.int_value(SettingKey.opening_size),) * 2, np.uint8)
         image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
         return image
 
@@ -238,8 +238,8 @@ class Analyzer(QObject):
         return m_list, cnt_list
 
     def particle_test(self, contours):
-        max_area = self.settings.int_value(default_settings.maximum_area_for_detection)
-        min_area = self.settings.int_value(default_settings.minimum_area_for_detection)
+        max_area = self.settings.int_value(SettingKey.maximum_area_for_detection)
+        min_area = self.settings.int_value(SettingKey.minimum_area_for_detection)
         moments = cv2.moments(contours)
         area = moments['m00']
 
@@ -247,9 +247,9 @@ class Analyzer(QObject):
         if min_area < area <= max_area:
             judgement = Analyzer.Judgement.TRUE.value
 
-        if self.settings.boolean_value(default_settings.split_circular_particles):
+        if self.settings.boolean_value(SettingKey.split_circular_particles):
             r_approx = np.sqrt(area / np.pi)
-            is_touching = self.settings.int_value(default_settings.split_radius) * 1.05 <= r_approx
+            is_touching = self.settings.int_value(SettingKey.split_radius) * 1.05 <= r_approx
             if is_touching:
                 judgement = judgement | 0b_10
         return judgement, moments

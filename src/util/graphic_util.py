@@ -2,7 +2,7 @@ from PySide6.QtGui import QBrush, QColor, QPen
 from PySide6.QtCore import Qt
 
 from src.settings.settings import Settings
-from src.settings import default_settings
+from src.settings.default_settings import SettingKey
 
 
 class SettingWidgetHelper(object):
@@ -21,7 +21,7 @@ class SettingWidgetHelper(object):
         """
         brush = QBrush()
         brush.setStyle(Qt.BrushStyle.SolidPattern)
-        colors = self.settings.list_value(default_settings.particle_color)
+        colors = self.settings.list_value(SettingKey.particle_color)
         colors = [QColor(c) for c in colors]
         brush.setColor(colors[index % len(colors)])
         return brush
@@ -33,7 +33,7 @@ class SettingWidgetHelper(object):
         :return: QPen
         """
         pen = QPen()
-        colors = self.settings.list_value(default_settings.particle_color)
+        colors = self.settings.list_value(SettingKey.particle_color)
         colors = [QColor(c) for c in colors]
         pen.setColor(colors[index % len(colors)])
         pen.setStyle(Qt.PenStyle.SolidLine)
@@ -46,11 +46,11 @@ class SettingWidgetHelper(object):
         :param index: 粒子序号
         :return: QBrush
         """
-        if self.settings.boolean_value(default_settings.same_mark_color_with_particle):
+        if self.settings.boolean_value(SettingKey.same_mark_color_with_particle):
             return self.particle_brush(index)
         else:
             brush = QBrush()
-            colors = self.settings.list_value(default_settings.mark_color)
+            colors = self.settings.list_value(SettingKey.mark_color)
             colors = [QColor(c) for c in colors]
             brush.setStyle(Qt.BrushStyle.SolidPattern)
             brush.setColor(colors[index % len(colors)])
@@ -62,27 +62,27 @@ class SettingWidgetHelper(object):
         :param index: 粒子序号
         :return: QPen
         """
-        if self.settings.boolean_value(default_settings.same_trajectory_color_with_particle):
+        if self.settings.boolean_value(SettingKey.same_trajectory_color_with_particle):
             return self.particle_pen(index)
         else:
             pen = QPen()
-            colors = self.settings.list_value(default_settings.trajectory_color)
+            colors = self.settings.list_value(SettingKey.trajectory_color)
             colors = [QColor(c) for c in colors]
             pen.setStyle(Qt.PenStyle.SolidLine)
             pen.setColor(colors[index % len(colors)])
-            pen.setWidth(self.settings.int_value(default_settings.trajectory_width))
+            pen.setWidth(self.settings.int_value(SettingKey.trajectory_width))
             pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             return pen
 
-    def visible(self, setting_item: default_settings.SettingItem, index: int) -> bool:
+    def visible(self, setting_key: SettingKey, index: int) -> bool:
         """
         控制粒子显示/隐藏
-        :param setting_item: 显示粒子/显示标记/显示轨迹
+        :param setting_key: 显示粒子/显示标记/显示轨迹
         :param index: 粒子序号
         :return: 显示/隐藏粒子
         """
-        index_filter = self.settings.list_value(default_settings.index_filter)
-        return self.settings.boolean_value(setting_item) and (index in index_filter or len(index_filter) == 0)
+        index_filter = self.settings.list_value(SettingKey.index_filter)
+        return self.settings.boolean_value(setting_key) and (index in index_filter or len(index_filter) == 0)
 
 

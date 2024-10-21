@@ -10,7 +10,7 @@ from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants, QPa
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
 from src.model.models import GraphicItems, OperationMode
-from src.settings.default_settings import show_particle, show_mark, show_trajectory, index_filter
+from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.util.common_util import split_indexes_text
 
@@ -126,8 +126,8 @@ class VideoScene(QGraphicsScene):
         for item in self.particle_items:
             self.removeItem(item)
         # 设置显示/隐藏
-        particle_shown = self.settings.boolean_value(show_particle)
-        mark_shown = self.settings.boolean_value(show_mark)
+        particle_shown = self.settings.boolean_value(SettingKey.show_particle)
+        mark_shown = self.settings.boolean_value(SettingKey.show_mark)
         self.particle_items = self.graphic_items.get_particle_items(frame_index)
         for item in self.particle_items:
             item.set_particle_visible(particle_shown)
@@ -143,7 +143,7 @@ class VideoScene(QGraphicsScene):
             self.removeItem(item)
         self.trajectory_items = self.graphic_items.get_trajectory_items(frame_index)
         for item in self.trajectory_items:
-            item.setVisible(self.settings.boolean_value(show_trajectory))
+            item.setVisible(self.settings.boolean_value(SettingKey.show_trajectory))
             self.addItem(item)
 
     @Slot(int, list)
@@ -179,7 +179,7 @@ class VideoScene(QGraphicsScene):
         是否显示粒子
         :param show: 是否显示
         """
-        self.settings.set_value(show_particle, show)
+        self.settings.set_value(SettingKey.show_particle, show)
         self.change_display(self.current_frame_index)
 
     @Slot(bool)
@@ -188,7 +188,7 @@ class VideoScene(QGraphicsScene):
         是否显示标记
         :param show: 是否显示
         """
-        self.settings.set_value(show_mark, show)
+        self.settings.set_value(SettingKey.show_mark, show)
         self.change_display(self.current_frame_index)
 
     @Slot(bool)
@@ -197,7 +197,7 @@ class VideoScene(QGraphicsScene):
         是否显示轨迹
         :param show: 是否显示
         """
-        self.settings.set_value(show_trajectory, show)
+        self.settings.set_value(SettingKey.show_trajectory, show)
         self.change_display(self.current_frame_index)
 
     @Slot(str)
@@ -207,7 +207,7 @@ class VideoScene(QGraphicsScene):
         :param filter_str: 过滤字符串, 支持"-"进行范围过滤，多个粒子可以使用","或者" "分割
         """
         indexes = split_indexes_text(filter_str)
-        self.settings.set_value(index_filter, indexes)
+        self.settings.set_value(SettingKey.index_filter, indexes)
         self.change_display(self.current_frame_index)
 
     @staticmethod

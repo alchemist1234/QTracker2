@@ -2,12 +2,14 @@ import os
 
 import numpy as np
 from PySide6.QtWidgets import *
-from PySide6.QtCore import Signal, QThread, QTimer
+from PySide6.QtCore import Signal, QThread, QTimer, Slot, Qt
 from PySide6.QtGui import QIcon
 
-from src.view.setting import *
-from src.worker import VideoLoader, Analyzer
+from src.settings.settings import Settings
+from src.settings.default_settings import SettingKey
+from src.view.setting import SettingDialog
 from src.view.video_scene import VideoScene
+from src.worker import VideoLoader, Analyzer
 from src.ui.main_ui import Ui_main_window
 from src.model.models import VideoMetaInfo, OperationMode
 
@@ -25,7 +27,7 @@ class MainWindow(QMainWindow):
         self.icon_pause = QIcon(':/icon/pause')
         # self.icon_pause.addFile(u":/icon/pause", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         # 从设置文件获取窗口大小
-        self.resize(settings.int_value(main_width), settings.int_value(main_height))
+        self.resize(settings.int_value(SettingKey.main_width), settings.int_value(SettingKey.main_height))
         self.setting_dialog = SettingDialog(settings)
         # 设置Graphics相关组件
         self.scene = VideoScene(self, self.settings)
@@ -66,7 +68,7 @@ class MainWindow(QMainWindow):
         self.ui.act_setting.triggered.connect(self.open_settings)
         self.ui.act_export.triggered.connect(self.export_video)
         # 设置窗口
-        self.setting_dialog.accepted.connect(self.setting_accepted)
+        # self.setting_dialog.accepted.connect(self.setting_accepted)
         # 视频加载/分析
         self.analyzer_thread.started.connect(self.analyzer.start)
         self.analyzer_thread.finished.connect(self.analyzer.stop)
@@ -98,7 +100,7 @@ class MainWindow(QMainWindow):
         self.ui.le_filter.textChanged.connect(self.scene.set_filter)
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
-        self.scene.sig_export_finish.connect(lambda : self.waiting_dialog.close())
+        self.scene.sig_export_finish.connect(lambda: self.waiting_dialog.close())
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):
@@ -139,14 +141,8 @@ class MainWindow(QMainWindow):
         """
         打开设置
         """
+        self.setting_dialog.load_settings()
         self.setting_dialog.show()
-
-    @Slot()
-    def setting_accepted(self):
-        """
-        设置确认
-        """
-        self.setting_dialog.save_settings()
 
     @Slot(str)
     def update_file_path(self, file_path: str) -> None:
@@ -211,6 +207,8 @@ class MainWindow(QMainWindow):
         file_dir = ''
         file_name, file_type = QFileDialog.getSaveFileName(self, 'Export Video', file_dir,
                                                            filter='AVI File(*.avi);;FLV File(*.flv);;OGV File(*.ogv)')
+        if not file_name:
+            return
         file_path = os.path.join(file_dir, file_name)
         if len(file_path) > 0:
             self.waiting_dialog = QProgressDialog(self)

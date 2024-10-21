@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QDialog,
-    QDialogButtonBox, QFontComboBox, QGroupBox, QHBoxLayout,
-    QLabel, QLayout, QSizePolicy, QSpacerItem,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFontComboBox,
+    QGroupBox, QHBoxLayout, QLabel, QLayout,
+    QPushButton, QSizePolicy, QSpacerItem, QSpinBox,
+    QTabWidget, QVBoxLayout, QWidget)
 
 from src.view.custom_widget import ColorLabel
 
@@ -569,17 +569,38 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.tabWidget)
 
-        self.buttonBox = QDialogButtonBox(Dialog)
-        self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
+        self.horizontalLayout_16 = QHBoxLayout()
+        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
+        self.horizontalLayout_16.setContentsMargins(-1, 4, -1, 4)
+        self.btn_load_settings = QPushButton(Dialog)
+        self.btn_load_settings.setObjectName(u"btn_load_settings")
 
-        self.verticalLayout.addWidget(self.buttonBox)
+        self.horizontalLayout_16.addWidget(self.btn_load_settings)
+
+        self.btn_save_settings = QPushButton(Dialog)
+        self.btn_save_settings.setObjectName(u"btn_save_settings")
+
+        self.horizontalLayout_16.addWidget(self.btn_save_settings)
+
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_16.addItem(self.horizontalSpacer_9)
+
+        self.btn_ok = QPushButton(Dialog)
+        self.btn_ok.setObjectName(u"btn_ok")
+
+        self.horizontalLayout_16.addWidget(self.btn_ok)
+
+        self.btn_cancel = QPushButton(Dialog)
+        self.btn_cancel.setObjectName(u"btn_cancel")
+
+        self.horizontalLayout_16.addWidget(self.btn_cancel)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_16)
 
 
         self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
-        self.buttonBox.rejected.connect(Dialog.reject)
 
         self.tabWidget.setCurrentIndex(0)
 
@@ -631,5 +652,9 @@ class Ui_Dialog(object):
         self.lb_trajectory_width.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u5bbd\u5ea6", None))
         self.chb_same_trajectory_color_with_particle.setText(QCoreApplication.translate("Dialog", u"\u4e0e\u7c92\u5b50\u989c\u8272\u76f8\u540c", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_display), QCoreApplication.translate("Dialog", u"\u663e\u793a", None))
+        self.btn_load_settings.setText(QCoreApplication.translate("Dialog", u"\u5bfc\u5165\u914d\u7f6e", None))
+        self.btn_save_settings.setText(QCoreApplication.translate("Dialog", u"\u5bfc\u51fa\u914d\u7f6e", None))
+        self.btn_ok.setText(QCoreApplication.translate("Dialog", u"\u786e\u5b9a", None))
+        self.btn_cancel.setText(QCoreApplication.translate("Dialog", u"\u53d6\u6d88", None))
     # retranslateUi
 

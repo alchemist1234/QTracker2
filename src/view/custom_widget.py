@@ -2,11 +2,11 @@ import math
 from typing import Union, List
 
 from PySide6.QtCore import Qt, Signal, QPoint
-from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent
+from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont
 from PySide6.QtWidgets import (QLabel, QWidget, QHBoxLayout, QListView, QSizePolicy, QSpacerItem, QGraphicsEllipseItem,
                                QGraphicsItem, QGraphicsLineItem, QGraphicsSimpleTextItem, QGraphicsItemGroup)
 
-from src.settings.default_settings import *
+from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.util.graphic_util import SettingWidgetHelper
 from src.ui.view_btn_grp_ui import Ui_wid_button_group
@@ -144,7 +144,7 @@ class ParticleItem(QGraphicsEllipseItem):
         :param x: x坐标
         :param y: y坐标
         """
-        radius = settings.int_value(particle_size)
+        radius = settings.int_value(SettingKey.particle_size)
         super().__init__(x - radius, y - radius, radius * 2, radius * 2)
         self.settings = settings
         self.settings_helper = SettingWidgetHelper(settings)
@@ -178,11 +178,11 @@ class MarkItem(QGraphicsSimpleTextItem):
         self.index = index
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
-        font = QFont(self.settings.value(mark_font))
-        font.setPixelSize(self.settings.int_value(mark_size))
+        font = QFont(self.settings.value(SettingKey.mark_font))
+        font.setPixelSize(self.settings.int_value(SettingKey.mark_size))
         self.setFont(font)
         self.setBrush(self.settings_helper.mark_brush(index))
-        radius = self.settings.int_value(particle_size)
+        radius = self.settings.int_value(SettingKey.particle_size)
         x = center_x - radius - self.boundingRect().width()
         y = center_y - radius - self.boundingRect().height()
         if x < 0:

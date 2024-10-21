@@ -4,7 +4,7 @@ from enum import Enum
 
 from src.view.custom_widget import TrajectoryItem, ParticleGroup
 from src.settings.settings import Settings
-from src.settings.default_settings import index_filter
+from src.settings.default_settings import SettingKey
 
 
 class OperationMode(Enum):
@@ -335,7 +335,7 @@ class GraphicItems(object):
         :return: 粒子Item对象列表
         """
         if frame_index in self.particle_group:
-            filtered_particles = self.settings.list_value(index_filter)
+            filtered_particles = self.settings.list_value(SettingKey.index_filter)
             return [item for particle_id, item in self.particle_group[frame_index].items()
                     if particle_id in filtered_particles or not filtered_particles]
         return []
@@ -346,7 +346,7 @@ class GraphicItems(object):
         :param frame_index: 帧ID
         :return: 轨迹Item对象列表
         """
-        filtered_particles = self.settings.list_value(index_filter)
+        filtered_particles = self.settings.list_value(SettingKey.index_filter)
         return [item for f_index, item_dict in self.trajectory_items.items() if f_index <= frame_index
                 for particle_id, item in item_dict.items()
                 if particle_id in filtered_particles or not filtered_particles]
