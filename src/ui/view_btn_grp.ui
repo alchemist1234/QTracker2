@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>172</width>
-    <height>258</height>
+    <height>280</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -110,6 +110,9 @@
        </disabled>
       </palette>
      </property>
+     <property name="toolTip">
+      <string>选择/移动</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -197,6 +200,9 @@
        </disabled>
       </palette>
      </property>
+     <property name="toolTip">
+      <string>添加粒子</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -280,6 +286,9 @@
         </colorrole>
        </disabled>
       </palette>
+     </property>
+     <property name="toolTip">
+      <string>裁切画面</string>
      </property>
      <property name="text">
       <string/>
@@ -365,6 +374,9 @@
        </disabled>
       </palette>
      </property>
+     <property name="toolTip">
+      <string>合并粒子</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -397,7 +409,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>32</height>
       </size>
      </property>
     </spacer>
@@ -464,6 +476,9 @@
         </colorrole>
        </disabled>
       </palette>
+     </property>
+     <property name="toolTip">
+      <string>显示/隐藏粒子</string>
      </property>
      <property name="text">
       <string/>
@@ -549,6 +564,9 @@
        </disabled>
       </palette>
      </property>
+     <property name="toolTip">
+      <string>显示/隐藏标记</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -633,12 +651,102 @@
        </disabled>
       </palette>
      </property>
+     <property name="toolTip">
+      <string>显示/隐藏轨迹</string>
+     </property>
      <property name="text">
       <string/>
      </property>
      <property name="icon">
       <iconset resource="../../resources.qrc">
        <normaloff>:/icon/ray</normaloff>:/icon/ray</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>16</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_show_frame_index">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="Accent">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>168</red>
+           <green>168</green>
+           <blue>168</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="Accent">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>168</red>
+           <green>168</green>
+           <blue>168</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="Button">
+         <brush brushstyle="SolidPattern">
+          <color alpha="77">
+           <red>249</red>
+           <green>249</green>
+           <blue>249</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="ButtonText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="92">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Accent">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>168</red>
+           <green>168</green>
+           <blue>168</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="toolTip">
+      <string>显示/隐藏帧号</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../../resources.qrc">
+       <normaloff>:/icon/index</normaloff>:/icon/index</iconset>
      </property>
      <property name="iconSize">
       <size>

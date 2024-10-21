@@ -56,6 +56,19 @@ class SettingWidgetHelper(object):
             brush.setColor(colors[index % len(colors)])
             return brush
 
+    def frame_label_brush(self, index: int) -> QBrush:
+        """
+        绘制帧号的QBrush
+        :param index: 粒子序号
+        :return: QBrush
+        """
+        brush = QBrush()
+        colors = self.settings.list_value(SettingKey.frame_label_color)
+        colors = [QColor(c) for c in colors]
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        brush.setColor(colors[index % len(colors)])
+        return brush
+
     def trajectory_pen(self, index: int) -> QPen:
         """
         绘制轨迹的QPen

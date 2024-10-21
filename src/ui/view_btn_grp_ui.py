@@ -23,7 +23,7 @@ class Ui_wid_button_group(object):
     def setupUi(self, wid_button_group):
         if not wid_button_group.objectName():
             wid_button_group.setObjectName(u"wid_button_group")
-        wid_button_group.resize(172, 258)
+        wid_button_group.resize(172, 280)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -126,7 +126,7 @@ class Ui_wid_button_group(object):
 
         self.vboxLayout.addWidget(self.btn_combine)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
+        self.verticalSpacer = QSpacerItem(20, 32, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.vboxLayout.addItem(self.verticalSpacer)
 
@@ -190,6 +190,26 @@ class Ui_wid_button_group(object):
 
         self.vboxLayout.addWidget(self.btn_show_trajectory)
 
+        self.btn_show_frame_index = QPushButton(wid_button_group)
+        self.btn_show_frame_index.setObjectName(u"btn_show_frame_index")
+        sizePolicy1.setHeightForWidth(self.btn_show_frame_index.sizePolicy().hasHeightForWidth())
+        self.btn_show_frame_index.setSizePolicy(sizePolicy1)
+        palette7 = QPalette()
+        palette7.setBrush(QPalette.Active, QPalette.Accent, brush)
+        palette7.setBrush(QPalette.Inactive, QPalette.Accent, brush)
+        palette7.setBrush(QPalette.Disabled, QPalette.Button, brush1)
+        palette7.setBrush(QPalette.Disabled, QPalette.ButtonText, brush2)
+        palette7.setBrush(QPalette.Disabled, QPalette.Accent, brush)
+        self.btn_show_frame_index.setPalette(palette7)
+        icon7 = QIcon()
+        icon7.addFile(u":/icon/index", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_show_frame_index.setIcon(icon7)
+        self.btn_show_frame_index.setIconSize(QSize(16, 20))
+        self.btn_show_frame_index.setCheckable(True)
+        self.btn_show_frame_index.setChecked(True)
+
+        self.vboxLayout.addWidget(self.btn_show_frame_index)
+
 
         self.retranslateUi(wid_button_group)
 
@@ -198,12 +218,37 @@ class Ui_wid_button_group(object):
 
     def retranslateUi(self, wid_button_group):
         wid_button_group.setWindowTitle("")
+#if QT_CONFIG(tooltip)
+        self.btn_move.setToolTip(QCoreApplication.translate("wid_button_group", u"\u9009\u62e9/\u79fb\u52a8", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_move.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_add.setToolTip(QCoreApplication.translate("wid_button_group", u"\u6dfb\u52a0\u7c92\u5b50", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_add.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_crop.setToolTip(QCoreApplication.translate("wid_button_group", u"\u88c1\u5207\u753b\u9762", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_crop.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_combine.setToolTip(QCoreApplication.translate("wid_button_group", u"\u5408\u5e76\u7c92\u5b50", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_combine.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_show_particle.setToolTip(QCoreApplication.translate("wid_button_group", u"\u663e\u793a/\u9690\u85cf\u7c92\u5b50", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_show_particle.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_show_mark.setToolTip(QCoreApplication.translate("wid_button_group", u"\u663e\u793a/\u9690\u85cf\u6807\u8bb0", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_show_mark.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_show_trajectory.setToolTip(QCoreApplication.translate("wid_button_group", u"\u663e\u793a/\u9690\u85cf\u8f68\u8ff9", None))
+#endif // QT_CONFIG(tooltip)
         self.btn_show_trajectory.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_show_frame_index.setToolTip(QCoreApplication.translate("wid_button_group", u"\u663e\u793a/\u9690\u85cf\u5e27\u53f7", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_show_frame_index.setText("")
     # retranslateUi
 

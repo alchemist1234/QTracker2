@@ -140,6 +140,9 @@ class SettingDialog(QDialog):
         self.ui.spb_trajectory_width.setValue(source_settings.int_value(SettingKey.trajectory_width))
         self.ui.chb_same_trajectory_color_with_particle.setChecked(
             source_settings.boolean_value(SettingKey.same_trajectory_color_with_particle))
+        self.ui.lb_frame_label_display.set_color(source_settings.value(SettingKey.frame_label_color))
+        self.ui.spb_frame_label_size.setValue(source_settings.int_value(SettingKey.frame_label_size))
+        self.ui.fcb_frame_label_font.setCurrentFont(source_settings.value(SettingKey.frame_label_font))
 
     def save_settings(self, settings: Settings = None) -> None:
         """
@@ -183,3 +186,6 @@ class SettingDialog(QDialog):
         target_settings.set_value(SettingKey.trajectory_width, self.ui.spb_trajectory_width.value())
         target_settings.set_value(SettingKey.same_trajectory_color_with_particle,
                                   self.ui.chb_same_trajectory_color_with_particle.isChecked())
+        target_settings.set_value(SettingKey.frame_label_color, self.ui.lb_frame_label_display.colors)
+        target_settings.set_value(SettingKey.frame_label_size, self.ui.spb_frame_label_size.value())
+        target_settings.set_value(SettingKey.frame_label_font, self.ui.fcb_frame_label_font.currentFont())

@@ -51,6 +51,10 @@ class VideoScene(QGraphicsScene):
         self.current_frame_item = QGraphicsPixmapItem()
         self.addItem(self.current_frame_item)
 
+        # 帧号对象
+        self.frame_label_item = None
+
+        # 裁切框
         self.crop_item: QGraphicsRectItem = self.create_crop_item()
         self.addItem(self.crop_item)
 
@@ -106,17 +110,23 @@ class VideoScene(QGraphicsScene):
         frame_indexes.sort()
         return frame_indexes
 
-    def __change_frame_display(self, index: int) -> None:
+    def __change_frame_display(self, frame_index: int) -> None:
         """
         切换图像显示
-        :param index: 帧ID
+        :param frame_index: 帧ID
         """
-        if index in self.frames_base64:
-            base64 = self.frames_base64[index]
+        if frame_index in self.frames_base64:
+            base64 = self.frames_base64[frame_index]
             byte_arr = QByteArray(base64)
             img = QImage()
             img.loadFromData(QByteArray.fromBase64(byte_arr))
             self.current_frame_item.setPixmap(QPixmap.fromImage(img))
+        # 帧号
+        if self.frame_label_item:
+            self.removeItem(self.frame_label_item)
+        self.frame_label_item = self.graphic_items.get_frame_label_item(frame_index)
+        if self.frame_label_item:
+            self.addItem(self.frame_label_item)
 
     def __change_particle_display(self, frame_index: int) -> None:
         """
@@ -156,6 +166,7 @@ class VideoScene(QGraphicsScene):
         print(frame_index, particles)
         particle_map = {p[0]: p[1] for p in particles}
         self.graphic_items.add_frame_particles(frame_index, particle_map)
+        self.graphic_items.add_frame_label(frame_index)
 
     @Slot()
     def combine_particles(self) -> None:
@@ -208,6 +219,14 @@ class VideoScene(QGraphicsScene):
         """
         indexes = split_indexes_text(filter_str)
         self.settings.set_value(SettingKey.index_filter, indexes)
+        self.change_display(self.current_frame_index)
+
+    def set_frame_label_visible(self, show: bool) -> None:
+        """
+        是否显示帧号
+        :param show: 是否隐藏
+        """
+        self.settings.set_value(SettingKey.show_frame_label, show)
         self.change_display(self.current_frame_index)
 
     @staticmethod

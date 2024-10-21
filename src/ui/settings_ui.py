@@ -565,6 +565,57 @@ class Ui_Dialog(object):
 
         self.verticalLayout7.addWidget(self.groupBox_8)
 
+        self.groupBox_9 = QGroupBox(self.tab_display)
+        self.groupBox_9.setObjectName(u"groupBox_9")
+        self.verticalLayout_5 = QVBoxLayout(self.groupBox_9)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.horizontalLayout_17 = QHBoxLayout()
+        self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
+        self.lb_frame_label = QLabel(self.groupBox_9)
+        self.lb_frame_label.setObjectName(u"lb_frame_label")
+
+        self.horizontalLayout_17.addWidget(self.lb_frame_label)
+
+        self.lb_frame_label_display = ColorLabel(self.groupBox_9)
+        self.lb_frame_label_display.setObjectName(u"lb_frame_label_display")
+
+        self.horizontalLayout_17.addWidget(self.lb_frame_label_display)
+
+        self.lb_frame_label_size = QLabel(self.groupBox_9)
+        self.lb_frame_label_size.setObjectName(u"lb_frame_label_size")
+
+        self.horizontalLayout_17.addWidget(self.lb_frame_label_size)
+
+        self.spb_frame_label_size = QSpinBox(self.groupBox_9)
+        self.spb_frame_label_size.setObjectName(u"spb_frame_label_size")
+
+        self.horizontalLayout_17.addWidget(self.spb_frame_label_size)
+
+
+        self.verticalLayout_5.addLayout(self.horizontalLayout_17)
+
+        self.horizontalLayout_18 = QHBoxLayout()
+        self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
+        self.lb_frame_label_font = QLabel(self.groupBox_9)
+        self.lb_frame_label_font.setObjectName(u"lb_frame_label_font")
+
+        self.horizontalLayout_18.addWidget(self.lb_frame_label_font)
+
+        self.fcb_frame_label_font = QFontComboBox(self.groupBox_9)
+        self.fcb_frame_label_font.setObjectName(u"fcb_frame_label_font")
+
+        self.horizontalLayout_18.addWidget(self.fcb_frame_label_font)
+
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_18.addItem(self.horizontalSpacer_10)
+
+
+        self.verticalLayout_5.addLayout(self.horizontalLayout_18)
+
+
+        self.verticalLayout7.addWidget(self.groupBox_9)
+
         self.tabWidget.addTab(self.tab_display, "")
 
         self.verticalLayout.addWidget(self.tabWidget)
@@ -651,6 +702,11 @@ class Ui_Dialog(object):
         self.lb_trajectory_color_display.setText("")
         self.lb_trajectory_width.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u5bbd\u5ea6", None))
         self.chb_same_trajectory_color_with_particle.setText(QCoreApplication.translate("Dialog", u"\u4e0e\u7c92\u5b50\u989c\u8272\u76f8\u540c", None))
+        self.groupBox_9.setTitle(QCoreApplication.translate("Dialog", u"\u5e27", None))
+        self.lb_frame_label.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u989c\u8272", None))
+        self.lb_frame_label_display.setText("")
+        self.lb_frame_label_size.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u5927\u5c0f", None))
+        self.lb_frame_label_font.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u5b57\u4f53", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_display), QCoreApplication.translate("Dialog", u"\u663e\u793a", None))
         self.btn_load_settings.setText(QCoreApplication.translate("Dialog", u"\u5bfc\u5165\u914d\u7f6e", None))
         self.btn_save_settings.setText(QCoreApplication.translate("Dialog", u"\u5bfc\u51fa\u914d\u7f6e", None))

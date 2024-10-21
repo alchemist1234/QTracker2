@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Tuple, Any, Dict, List, Collection, Optional
 from enum import Enum
 
-from src.view.custom_widget import TrajectoryItem, ParticleGroup
+from src.view.custom_widget import TrajectoryItem, ParticleGroup, FrameLabelItem
 from src.settings.settings import Settings
 from src.settings.default_settings import SettingKey
 
@@ -195,6 +195,8 @@ class GraphicItems(object):
         # {帧ID: {粒子ID: 轨迹Item, ...}, ...}
         # 每帧轨迹ID只保存当前帧新增轨迹，显示时需要把小于等于当前帧所有轨迹Item全部展示
         self.trajectory_items: Dict[int, Dict[int, TrajectoryItem]] = {}
+        # 帧ID对象
+        self.frame_label_items: Dict[int, FrameLabelItem] = {}
 
     def add_particle(self, frame_index: int, particle_id: int, pos: Tuple[int, int]) -> None:
         """
@@ -217,6 +219,9 @@ class GraphicItems(object):
         """
         self.particle_positions.add_frame_particles(frame_index, particles)
         self.update_frame_items(frame_index)
+
+    def add_frame_label(self, frame_index: int):
+        self.frame_label_items[frame_index] = FrameLabelItem(self.settings, frame_index)
 
     def remove_particle(self, frame_index: int, particle_id: int) -> None:
         """
@@ -350,6 +355,10 @@ class GraphicItems(object):
         return [item for f_index, item_dict in self.trajectory_items.items() if f_index <= frame_index
                 for particle_id, item in item_dict.items()
                 if particle_id in filtered_particles or not filtered_particles]
+
+    def get_frame_label_item(self, frame_index: int) -> Optional[FrameLabelItem]:
+        show = self.settings.boolean_value(SettingKey.show_frame_label)
+        return self.frame_label_items.get(frame_index) if show else None
 
     def clear(self) -> None:
         """

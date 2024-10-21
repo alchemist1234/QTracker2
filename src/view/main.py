@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
         self.ui.gv_video.btn_group.ui.btn_show_particle.clicked.connect(self.scene.set_particle_visible)
         self.ui.gv_video.btn_group.ui.btn_show_mark.clicked.connect(self.scene.set_mark_visible)
         self.ui.gv_video.btn_group.ui.btn_show_trajectory.clicked.connect(self.scene.set_trajectory_visible)
+        self.ui.gv_video.btn_group.ui.btn_show_frame_index.clicked.connect(self.scene.set_frame_label_visible)
         self.ui.le_filter.textChanged.connect(self.scene.set_filter)
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))

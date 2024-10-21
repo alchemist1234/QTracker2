@@ -179,7 +179,7 @@ class MarkItem(QGraphicsSimpleTextItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         font = QFont(self.settings.value(SettingKey.mark_font))
-        font.setPixelSize(self.settings.int_value(SettingKey.mark_size))
+        font.setPointSize(self.settings.int_value(SettingKey.mark_size))
         self.setFont(font)
         self.setBrush(self.settings_helper.mark_brush(index))
         radius = self.settings.int_value(SettingKey.particle_size)
@@ -236,9 +236,32 @@ class TrajectoryItem(QGraphicsLineItem):
         super().__init__(x1, y1, x2, y2)
         self.settings = settings
         self.index = index
-        self.settings_helper = SettingWidgetHelper(settings)
+        self.setting_helper = SettingWidgetHelper(settings)
         self.distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-        self.setPen(self.settings_helper.trajectory_pen(index))
+        self.setPen(self.setting_helper.trajectory_pen(index))
 
     def update_pen(self):
-        self.setPen(self.settings_helper.trajectory_pen(self.index))
+        self.setPen(self.setting_helper.trajectory_pen(self.index))
+
+class FrameLabelItem(QGraphicsSimpleTextItem):
+    def __init__(self, settings: Settings, index: int, x = 0, y = 0):
+        """
+        轨迹Item（一段）
+        :param settings: 配置信息
+        :param index: 粒子序号
+        :param x: 起点x坐标
+        :param y: 起点y坐标
+        """
+        super().__init__(str(index))
+        self.settings = settings
+        self.setting_helper = SettingWidgetHelper(settings)
+        self.index = index
+        self.setX(x)
+        self.setY(y)
+        font = QFont(self.settings.value(SettingKey.frame_label_font))
+        font.setPointSize(self.settings.int_value(SettingKey.frame_label_size))
+        self.setBrush(self.setting_helper.frame_label_brush(index))
+        self.setFont(font)
+
+    def update_brush(self):
+        self.setBrush(self.setting_helper.frame_label_brush(self.index))
