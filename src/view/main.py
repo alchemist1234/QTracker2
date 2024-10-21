@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Signal, QThread, QTimer
@@ -42,6 +44,8 @@ class MainWindow(QMainWindow):
         self.play_timer = QTimer(self)
         self.playing = False
 
+        self.waiting_dialog = None
+
         # 设置信息/槽连接
         self.setup_connects()
 
@@ -60,6 +64,7 @@ class MainWindow(QMainWindow):
         # 工具栏按钮点击
         self.ui.act_open.triggered.connect(self.open_file)
         self.ui.act_setting.triggered.connect(self.open_settings)
+        self.ui.act_export.triggered.connect(self.export_video)
         # 设置窗口
         self.setting_dialog.accepted.connect(self.setting_accepted)
         # 视频加载/分析
@@ -80,7 +85,7 @@ class MainWindow(QMainWindow):
         self.analyzer_thread.started.connect(self.analyzer.run)
         self.ui.btn_play.clicked.connect(self.play_video)
         self.play_timer.timeout.connect(self.scene.change_to_next_frame)
-        # view
+        # view & scene
         self.ui.gv_video.btn_group.ui.btn_add.clicked.connect(lambda checked: self.scene.update_mode(OperationMode.ADD))
         self.ui.gv_video.btn_group.ui.btn_move.clicked.connect(
             lambda checked: self.scene.update_mode(OperationMode.MOVE))
@@ -91,6 +96,9 @@ class MainWindow(QMainWindow):
         self.ui.gv_video.btn_group.ui.btn_show_mark.clicked.connect(self.scene.set_mark_visible)
         self.ui.gv_video.btn_group.ui.btn_show_trajectory.clicked.connect(self.scene.set_trajectory_visible)
         self.ui.le_filter.textChanged.connect(self.scene.set_filter)
+        self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
+        self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
+        self.scene.sig_export_finish.connect(lambda : self.waiting_dialog.close())
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):
@@ -197,6 +205,21 @@ class MainWindow(QMainWindow):
                 self.play_timer.start()
                 self.playing = True
                 self.ui.btn_play.setIcon(self.icon_pause)
+
+    @Slot()
+    def export_video(self):
+        file_dir = ''
+        file_name, file_type = QFileDialog.getSaveFileName(self, 'Export Video', file_dir,
+                                                           filter='AVI File(*.avi);;FLV File(*.flv);;OGV File(*.ogv)')
+        file_path = os.path.join(file_dir, file_name)
+        if len(file_path) > 0:
+            self.waiting_dialog = QProgressDialog(self)
+            self.waiting_dialog.setWindowTitle('请稍候')
+            self.waiting_dialog.setLabelText('正在导出...')
+            self.waiting_dialog.setMinimumDuration(100)
+            self.waiting_dialog.setWindowModality(Qt.WindowModality.WindowModal)
+            self.waiting_dialog.show()
+            self.scene.export(file_path, self.video_meta.fps)
 
     def closeEvent(self, event) -> None:
         """

@@ -1,10 +1,13 @@
-import numpy as np
+import os
 from typing import Tuple, List
+
+import cv2
+import numpy as np
 
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox,
                                QLineEdit, QWidget, QGraphicsRectItem, QGraphicsItem)
-from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants
-from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF
+from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants, QPainter
+from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
 from src.model.models import GraphicItems, OperationMode
 from src.settings.default_settings import show_particle, show_mark, show_trajectory, index_filter
@@ -13,6 +16,17 @@ from src.util.common_util import split_indexes_text
 
 
 class VideoScene(QGraphicsScene):
+    sig_export_start = Signal(int)
+    sig_export_frame = Signal(int)
+    sig_export_finish = Signal()
+
+    codes_map = {
+        '.avi': 'XVID',
+        '.flv': 'FLV1',
+        '.mp4': 'X264',
+        '.ogv': 'THEO'
+    }
+
     def __init__(self, parent: QWidget = None, settings: Settings = None):
         super().__init__(parent)
         # 设置图形项搜索方法
@@ -86,6 +100,11 @@ class VideoScene(QGraphicsScene):
         if next_frame not in self.frames_base64:
             next_frame = 0
         self.change_display(next_frame)
+
+    def sorted_frame_indexes(self):
+        frame_indexes = list(self.frames_base64.keys())
+        frame_indexes.sort()
+        return frame_indexes
 
     def __change_frame_display(self, index: int) -> None:
         """
@@ -245,6 +264,7 @@ class VideoScene(QGraphicsScene):
                 self.crop_item.setRect(QRectF(event.scenePos(), event.scenePos()))
                 self.crop_item.setVisible(True)
             if event.buttons() == Qt.MouseButton.RightButton:
+                self.crop_item.setRect(QRectF(0, 0, 0, 0))
                 self.crop_item.setVisible(False)
         super(VideoScene, self).mousePressEvent(event)
 
@@ -298,3 +318,52 @@ class VideoScene(QGraphicsScene):
                 self.graphic_items.remove_particles(self.current_frame_index, particle_ids)
                 self.change_display(self.current_frame_index)
         super(VideoScene, self).keyPressEvent(event)
+
+    @Slot(str, int)
+    def export(self, file_path: str, fps: int) -> None:
+        """
+        视频导出，支持裁切
+        TODO 优化宽度高度获取
+        TODO 区域的选择，裁切边框去除
+        TODO 异常处理
+        :param file_path: 导出文件位置
+        :param fps: 帧率
+        """
+        indexes = self.sorted_frame_indexes()
+        self.sig_export_start.emit(indexes[-1])
+        file_name, file_ext = os.path.splitext(file_path)
+
+        if self.crop_item.rect().width() > 0 and self.crop_item.rect().height() > 0:
+            img_width = int(self.crop_item.rect().width())
+            img_height = int(self.crop_item.rect().height())
+            source = self.crop_item.rect()
+        else:
+            base64 = self.frames_base64[1]
+            byte_arr = QByteArray(base64)
+            img = QImage()
+            img.loadFromData(QByteArray.fromBase64(byte_arr))
+            img_width = img.width()
+            img_height = img.height()
+            source = QRectF(0, 0, img_width, img_height)
+
+        writer = cv2.VideoWriter()
+        fourcc = VideoScene.codes_map[file_ext]
+        writer.open(file_path, cv2.VideoWriter.fourcc(*fourcc), fps, (img_width, img_height), True)
+
+        painter = QPainter()
+
+        for frame in indexes:
+            self.change_display(frame)
+            img = QImage(img_width, img_height, QImage.Format.Format_ARGB32)
+            painter.begin(img)
+            self.render(painter, source=source)
+            painter.end()
+            shape = (img.height(), img.bytesPerLine() * 8 // img.depth(), 4)
+            ptr = img.bits()
+            arr = np.array(ptr, dtype=np.uint8).reshape(shape)
+            arr = arr[..., :3]
+            writer.write(arr)
+            self.sig_export_frame.emit(frame)
+
+        writer.release()
+        self.sig_export_finish.emit()

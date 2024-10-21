@@ -49,17 +49,6 @@ class VideoLoader(QObject):
                     self.sig_all_frame_finished.emit()
 
 
-class VideoPlayer(QObject):
-    def __init__(self, video_meta_info: VideoMetaInfo):
-        super(VideoPlayer, self).__init__()
-        self.fps = video_meta_info.fps
-
-    def play(self):
-        while True:
-            time.sleep(1 / self.fps)
-            # TODO switch pic
-
-
 class Analyzer(QObject):
     """
     视频分析器
@@ -304,6 +293,6 @@ class Analyzer(QObject):
         return cnt_list_split
 
     @staticmethod
-    def circular_kernel(r):
+    def circular_kernel(r: int):
         y, x = np.ogrid[-r: r + 1, -r: r + 1]
         return (y * y + x * x <= r * r).astype(np.uint8)
