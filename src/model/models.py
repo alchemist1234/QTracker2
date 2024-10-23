@@ -522,13 +522,13 @@ class DataHelper(QObject):
         """
         self.analyze_result = self.particle_positions.analyze_particle_data(fps, scale)
 
-    def get_analyze_result(self, particle_id: int) -> List[AnalyzeResult]:
+    def get_analyze_result_model(self, particle_id: int) -> AnalyzeResultModel:
         """
-        获取粒子计算结果
+        获取粒子计算结果,并转成AnalyzeResultModel
         :param particle_id: 粒子ID
-        :return: 粒子每帧数据
+        :return: AnalyzeResultModel
         """
-        return self.analyze_result[particle_id] if particle_id in self.analyze_result else []
+        return AnalyzeResultModel(self.analyze_result[particle_id] if particle_id in self.analyze_result else [])
 
     def get_all_particle_ids(self) -> List[int]:
         """
