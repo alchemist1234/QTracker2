@@ -34,7 +34,7 @@ class ResultDialog(QDialog):
         窗口显示事件，加载下拉选项
         :param event: 显示事件
         """
-        ids = self.scene.graphic_items.get_all_particle_ids()
+        ids = self.scene.data_helper.get_all_particle_ids()
         self.ui.cb_particle.clear()
         if len(ids) > 0:
             # 需要把List[int]转成List[str]
@@ -55,7 +55,7 @@ class ResultDialog(QDialog):
         if not item_str.isdigit():
             return
         particle_id = int(item_str)
-        model = self.scene.graphic_items.get_analyze_result_model(particle_id)
+        model = self.scene.data_helper.get_analyze_result_model(particle_id)
         self.ui.tv_data.setModel(model)
 
     def export(self) -> None:
@@ -64,7 +64,7 @@ class ResultDialog(QDialog):
         """
         # 输入粒子ID，为空输出所有粒子
         text, ok = QInputDialog.getText(self, '请输入', '粒子ID')
-        ids = self.scene.graphic_items.get_all_particle_ids()
+        ids = self.scene.data_helper.get_all_particle_ids()
         if ok:
             text_ids = common_util.split_indexes_text(text)
             if len(text_ids) > 0:
@@ -77,7 +77,7 @@ class ResultDialog(QDialog):
                 writer = csv.writer(f)
                 for particle_id in ids:
                     writer.writerow([f'粒子{particle_id}'])
-                    model: AnalyzeResultModel = self.scene.graphic_items.get_analyze_result_model(particle_id)
+                    model: AnalyzeResultModel = self.scene.data_helper.get_analyze_result_model(particle_id)
                     writer.writerow(model.headers)
                     for r in range(model.rowCount()):
                         row = []

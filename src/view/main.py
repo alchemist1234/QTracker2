@@ -17,8 +17,10 @@ from src.model.models import VideoMetaInfo, OperationMode
 
 
 class MainWindow(QMainWindow):
+    sig_pre_analyze = Signal(str)
     sig_update_path = Signal(str)
-    sig_start_analyze = Signal(str)
+    sig_start_load = Signal(str)
+    sig_start_analyze = Signal()
 
     def __init__(self, settings: Settings):
         super().__init__()
@@ -83,19 +85,17 @@ class MainWindow(QMainWindow):
         self.ui.t_act_setting.triggered.connect(self.open_settings)
         self.ui.t_act_export.triggered.connect(self.export_video)
         self.ui.t_act_analyze.triggered.connect(self.analyze_result)
-        # 设置窗口
-        # self.setting_dialog.accepted.connect(self.setting_accepted)
         # 视频加载/分析
-        self.analyzer_thread.started.connect(self.analyzer.start)
+        self.analyzer_thread.started.connect(self.analyzer.start_and_run)
         self.analyzer_thread.finished.connect(self.analyzer.stop)
         self.sig_update_path.connect(self.update_file_path)
-        self.sig_start_analyze.connect(self.video_loader.load)
+        self.sig_pre_analyze.connect(self.pre_analyze)
+        self.sig_start_load.connect(self.video_loader.load)
+        self.sig_start_analyze.connect(self.analyzer.start_and_run)
         self.video_loader.sig_meta_info_updated.connect(self.video_meta_updated)
-        self.video_loader.sig_meta_info_updated.connect(self.analyzer_thread.start)
         self.video_loader.sig_frame_finished.connect(self.scene.add_frame)
         self.video_loader.sig_frame_finished.connect(self.analyze_data)
         self.video_loader.sig_first_frame_finished.connect(self.scene.change_display)
-        self.video_loader.sig_first_frame_finished.connect(self.update_slider_value)
         self.video_loader.sig_all_frame_finished.connect(self.all_analyze_data_send)
         self.ui.sl_frame.valueChanged.connect(self.scene.change_display)
         self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
         self.scene.sig_export_finish.connect(lambda: self.waiting_dialog.close())
+        self.scene.sig_frame_changed.connect(self.update_lcd_value)
+        self.scene.sig_frame_changed.connect(self.update_slider_value)
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):
@@ -128,13 +130,6 @@ class MainWindow(QMainWindow):
         :param data: 视频帧数据
         """
         self.analyzer.add_data(frame_index, data)
-
-    @Slot()
-    def stop_analyze(self):
-        """
-        停止分析
-        """
-        self.analyzer.stop()
 
     @Slot()
     def all_analyze_data_send(self):
@@ -153,7 +148,20 @@ class MainWindow(QMainWindow):
         if path:
             print(f'path: {path}, ext: {_}')
             self.sig_update_path.emit(path)
-            self.sig_start_analyze.emit(path)
+            self.sig_pre_analyze.emit(path)
+
+    @Slot(str)
+    def pre_analyze(self, path: str) -> None:
+        """
+        分析前的清理工作，
+        1. 停止现有分析循环
+        2. 清除Scene上的Item
+        :param path: 视频文件路径, 用于向sig_start_load信号传递参数
+        """
+        self.analyzer.stop()
+        self.scene.clear_data()
+        self.sig_start_analyze.emit()
+        self.sig_start_load.emit(path)
 
     def open_settings(self) -> None:
         """
@@ -177,6 +185,7 @@ class MainWindow(QMainWindow):
         :param meta_info: 视频元数据
         """
         self.video_meta = meta_info
+        self.ui.sl_frame.setMinimum(1)
         self.ui.sl_frame.setMaximum(meta_info.frame_count)
         if self.ui.sl_frame.value() > meta_info.frame_count:
             self.ui.sl_frame.setValue(meta_info.frame_count)
@@ -185,7 +194,6 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def update_slider_value(self, value: int) -> None:
-        # TODO 改成从scene的change_frame发起信号连接本函数
         """
         更新进度条
         :param value: 进度条值
@@ -196,7 +204,6 @@ class MainWindow(QMainWindow):
 
     @Slot(int)
     def update_lcd_value(self, value: int) -> None:
-        # TODO 改成从scene的change_frame发起信号连接本函数
         """
         更新LCD值
         :param value: 帧
@@ -270,10 +277,13 @@ class MainWindow(QMainWindow):
             else:
                 # 更新配置中的scale值
                 self.settings.set_value(SettingKey.scale, scale)
-        self.scene.graphic_items.analyze(fps, scale)
+        self.scene.data_helper.analyze(fps, scale)
 
     @Slot()
-    def open_about(self):
+    def open_about(self) -> None:
+        """
+        打开关于窗口
+        """
         self.about_dialog = AboutDialog()
         self.about_dialog.show()
 

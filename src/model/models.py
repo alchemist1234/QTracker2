@@ -544,6 +544,7 @@ class DataHelper(QObject):
         清空数据
         """
         self.particle_positions.clear()
+        self.particle_group.clear()
         self.trajectory_items.clear()
         self.frame_label_items.clear()
         self.analyze_result.clear()

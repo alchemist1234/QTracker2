@@ -75,15 +75,20 @@ class Analyzer(QObject):
         # [(frame_index, ndarray)]
         self.data_queue: List[Tuple[int, np.ndarray]] = []
         # 是否正在分析
-        self.running = False
+        self.working = False
         # 当前视频所有帧是否已全部发送到self.data_queue
         self.receiving = False
+        # 是否在循环中
+        # self.working用于外部更改使循环停止, self.running用于记录循环真实运行情况
+        self.running = False
 
     @Slot()
     def run(self) -> None:
+        self.running = True
         # 循环分析视频帧
         while True:
-            if not self.running:
+            print('still running')
+            if not self.working:
                 # 停止任务时结束循环
                 break
             if not self.receiving and len(self.data_queue) == 0:
@@ -96,22 +101,38 @@ class Analyzer(QObject):
                 data = self.data_queue.pop(0)
                 frame_index, frame = data
                 particle_pos = self.analyze(frame_index, frame)
-                if self.running and particle_pos is not None:
+                if self.working and particle_pos is not None:
                     # 发送帧分析完成信号
                     self.sig_frame_analyzed.emit(frame_index, list(particle_pos.items()))
             if not work:
                 time.sleep(0.5)
+        self.running = False
 
-    def start(self) -> None:
+    def start_and_run(self) -> None:
         """
         开始分析视频
         """
         self.data_queue.clear()
         self.history_particles.clear()
         self.max_label = 0
-        self.running = True
+        self.working = True
         self.receiving = True
-        self.run()
+        if not self.running:
+            self.run()
+
+    def stop(self) -> None:
+        """
+        停止分析, 清空数据
+        1. 停止接收数据、停止循环（非强行停止，需要等到当前循环结束）
+        2. 清除已接收数据
+        3. 清除历史数据
+        4. 最大粒子ID重置为0
+        """
+        self.working = False
+        self.receiving = False
+        self.data_queue.clear()
+        self.history_particles.clear()
+        self.max_label = 0
 
     def add_data(self, frame_index: int, frame: np.ndarray) -> None:
         """
@@ -121,12 +142,6 @@ class Analyzer(QObject):
         """
         self.data_queue.append((frame_index, frame))
 
-    def stop(self):
-        """
-        停止分析
-        """
-        self.running = False
-        self.receiving = False
 
     def all_data_received(self):
         """

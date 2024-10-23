@@ -19,6 +19,7 @@ class VideoScene(QGraphicsScene):
     sig_export_start = Signal(int)
     sig_export_frame = Signal(int)
     sig_export_finish = Signal()
+    sig_frame_changed = Signal(int)
 
     codes_map = {
         '.avi': 'XVID',
@@ -37,7 +38,7 @@ class VideoScene(QGraphicsScene):
         # 用base64存储图像数据，用QImage或者QPixmap存储内存占用过大
         self.frames_base64 = {}
         # GraphicItem存储容器
-        self.graphic_items = DataHelper(self.settings)
+        self.data_helper = DataHelper(self.settings)
         # 当前添加到QGraphicsScene中的粒子Item
         self.particle_items = []
         # 当前添加到QGraphicsScene中的轨迹Item
@@ -94,6 +95,7 @@ class VideoScene(QGraphicsScene):
         self.__change_frame_display(index)
         self.__change_trajectory_display(index)
         self.__change_particle_display(index)
+        self.sig_frame_changed.emit(index)
 
     @Slot()
     def change_to_next_frame(self) -> None:
@@ -124,7 +126,7 @@ class VideoScene(QGraphicsScene):
         # 帧号
         if self.frame_label_item:
             self.removeItem(self.frame_label_item)
-        self.frame_label_item = self.graphic_items.get_frame_label_item(frame_index)
+        self.frame_label_item = self.data_helper.get_frame_label_item(frame_index)
         if self.frame_label_item:
             self.addItem(self.frame_label_item)
 
@@ -138,7 +140,7 @@ class VideoScene(QGraphicsScene):
         # 设置显示/隐藏
         particle_shown = self.settings.boolean_value(SettingKey.show_particle)
         mark_shown = self.settings.boolean_value(SettingKey.show_mark)
-        self.particle_items = self.graphic_items.get_particle_items(frame_index)
+        self.particle_items = self.data_helper.get_particle_items(frame_index)
         for item in self.particle_items:
             item.set_particle_visible(particle_shown)
             item.set_mark_visible(mark_shown)
@@ -151,7 +153,7 @@ class VideoScene(QGraphicsScene):
         """
         for item in self.trajectory_items:
             self.removeItem(item)
-        self.trajectory_items = self.graphic_items.get_trajectory_items(frame_index)
+        self.trajectory_items = self.data_helper.get_trajectory_items(frame_index)
         for item in self.trajectory_items:
             item.setVisible(self.settings.boolean_value(SettingKey.show_trajectory))
             self.addItem(item)
@@ -165,8 +167,8 @@ class VideoScene(QGraphicsScene):
         """
         print(frame_index, particles)
         particle_map = {p[0]: p[1] for p in particles}
-        self.graphic_items.add_frame_particles(frame_index, particle_map)
-        self.graphic_items.add_frame_label(frame_index)
+        self.data_helper.add_frame_particles(frame_index, particle_map)
+        self.data_helper.add_frame_label(frame_index)
 
     @Slot()
     def combine_particles(self) -> None:
@@ -178,10 +180,10 @@ class VideoScene(QGraphicsScene):
             text, ok = QInputDialog.getText(None, "输入", "待合并的粒子编号(,或者空格分隔)", QLineEdit.EchoMode.Normal)
             if ok:
                 indexes = split_indexes_text(text)
-                self.graphic_items.combine_particles(indexes)
+                self.data_helper.combine_particles(indexes)
                 self.change_display(self.current_frame_index)
         else:
-            self.graphic_items.combine_particles(indexes)
+            self.data_helper.combine_particles(indexes)
             self.change_display(self.current_frame_index)
 
     @Slot(bool)
@@ -248,10 +250,15 @@ class VideoScene(QGraphicsScene):
         清除所有数据
         """
         self.current_frame_index = -1
-        self.graphic_items.clear()
+        # 通过切换帧到-1来清除Scene上的所有Item，避免把一些固有对象(比如图像Item和裁切Item)清除
+        self.change_display(-1)
+        self.data_helper.clear()
+        self.frames_base64.clear()
+        self.data_helper.clear()
         self.particle_items.clear()
         self.trajectory_items.clear()
-        self.clear()
+        self.frame_label_item = None
+        self.current_frame_item.setPixmap(QPixmap())
 
     @Slot(OperationMode)
     def update_mode(self, mode: OperationMode) -> None:
@@ -273,7 +280,7 @@ class VideoScene(QGraphicsScene):
                 scene_pos = event.scenePos().toPoint()
                 index, ok = QInputDialog.getInt(None, '输入', '粒子编号', 1)
                 if ok:
-                    self.graphic_items.add_particle(self.current_frame_index, index, (scene_pos.x(), scene_pos.y()))
+                    self.data_helper.add_particle(self.current_frame_index, index, (scene_pos.x(), scene_pos.y()))
                     self.change_display(self.current_frame_index)
             else:
                 QMessageBox.information(self, '提示', f'未加载视频')
@@ -301,8 +308,8 @@ class VideoScene(QGraphicsScene):
             particle_ids = {item.index for item in selected if hasattr(item, 'index')}
             if len(particle_ids) > 0:
                 # 所有选中的粒子ID
-                self.graphic_items.move_particles_by(self.current_frame_index, particle_ids, (moved.x(), moved.y()))
-                self.graphic_items.update_frame_items(self.current_frame_index)
+                self.data_helper.move_particles_by(self.current_frame_index, particle_ids, (moved.x(), moved.y()))
+                self.data_helper.update_frame_items(self.current_frame_index)
                 # 这里更新不能调用self.change_display(), 会导致selectedItems清空, 下次移动时坐标会变成(0, 0)
                 self.__change_trajectory_display(self.current_frame_index)
 
@@ -334,7 +341,7 @@ class VideoScene(QGraphicsScene):
             if len(self.selectedItems()) > 0:
                 # 所有选中的粒子ID
                 particle_ids = {item.index for item in self.selectedItems()}
-                self.graphic_items.remove_particles(self.current_frame_index, particle_ids)
+                self.data_helper.remove_particles(self.current_frame_index, particle_ids)
                 self.change_display(self.current_frame_index)
         super(VideoScene, self).keyPressEvent(event)
 
