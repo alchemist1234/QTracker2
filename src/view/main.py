@@ -33,6 +33,8 @@ class MainWindow(QMainWindow):
         self.resize(settings.int_value(SettingKey.main_width), settings.int_value(SettingKey.main_height))
         self.setting_dialog = SettingDialog(settings)
 
+        self.file_path = None
+
         # 设置Graphics相关组件
         self.scene = VideoScene(self, self.settings)
         self.ui.gv_video.setScene(self.scene)
@@ -77,14 +79,16 @@ class MainWindow(QMainWindow):
         self.ui.m_act_open.triggered.connect(self.open_file)
         self.ui.m_act_setting.triggered.connect(self.open_settings)
         self.ui.m_act_export.triggered.connect(self.export_video)
-        self.ui.m_act_analyze.triggered.connect(self.analyze_result)
+        self.ui.m_act_analyze.triggered.connect(lambda: self.pre_analyze(self.file_path))
+        self.ui.m_act_compute.triggered.connect(self.analyze_result)
         self.ui.m_act_exit.triggered.connect(self.close)
         self.ui.m_act_about.triggered.connect(self.open_about)
         # 工具栏按钮点击
         self.ui.t_act_open.triggered.connect(self.open_file)
         self.ui.t_act_setting.triggered.connect(self.open_settings)
+        self.ui.t_act_analyze.triggered.connect(lambda: self.pre_analyze(self.file_path))
+        self.ui.t_act_compute.triggered.connect(self.analyze_result)
         self.ui.t_act_export.triggered.connect(self.export_video)
-        self.ui.t_act_analyze.triggered.connect(self.analyze_result)
         # 视频加载/分析
         self.analyzer_thread.started.connect(self.analyzer.start_and_run)
         self.analyzer_thread.finished.connect(self.analyzer.stop)
@@ -147,6 +151,7 @@ class MainWindow(QMainWindow):
                                               filter='Video Files(*.mp4 *.avi *.mkv *.flv);;All File(*.*)')
         if path:
             print(f'path: {path}, ext: {_}')
+            self.file_path = path
             self.sig_update_path.emit(path)
             self.sig_pre_analyze.emit(path)
 
@@ -158,10 +163,11 @@ class MainWindow(QMainWindow):
         2. 清除Scene上的Item
         :param path: 视频文件路径, 用于向sig_start_load信号传递参数
         """
-        self.analyzer.stop()
-        self.scene.clear_data()
-        self.sig_start_analyze.emit()
-        self.sig_start_load.emit(path)
+        if path:
+            self.analyzer.stop()
+            self.scene.clear_data()
+            self.sig_start_analyze.emit()
+            self.sig_start_load.emit(path)
 
     def open_settings(self) -> None:
         """

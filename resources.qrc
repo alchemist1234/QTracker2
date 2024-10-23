@@ -11,8 +11,9 @@
     <file alias="ray">resources/icons/ray-start-end.png</file>
     <file alias="combine">resources/icons/vector-combine.png</file>
     <file alias="open_file">resources/icons/open-line.png</file>
-    <file alias="analyze">resources/icons/cpu-line.png</file>
+    <file alias="compute">resources/icons/cpu-line.png</file>
     <file alias="settings">resources/icons/settings-line.png</file>
+    <file alias="analyze">resources/icons/analyze.png</file>
     <file alias="export">resources/icons/content-save.png</file>
     <file alias="play">resources/icons/play-circle-outline.png</file>
     <file alias="pause">resources/icons/pause-circle-outline.png</file>

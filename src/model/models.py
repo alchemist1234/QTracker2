@@ -500,6 +500,9 @@ class DataHelper(QObject):
         :param frame_index: 帧
         :return: 轨迹Item对象列表
         """
+        # 如果没有粒子，不显示轨迹
+        if frame_index not in self.particle_group:
+            return []
         filtered_particles = self.settings.list_value(SettingKey.index_filter)
         return [item for f_index, item_dict in self.trajectory_items.items() if f_index <= frame_index
                 for particle_id, item in item_dict.items()

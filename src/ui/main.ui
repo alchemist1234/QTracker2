@@ -108,6 +108,7 @@
     <addaction name="m_act_open"/>
     <addaction name="m_act_setting"/>
     <addaction name="m_act_analyze"/>
+    <addaction name="m_act_compute"/>
     <addaction name="m_act_export"/>
     <addaction name="separator"/>
     <addaction name="m_act_exit"/>
@@ -135,6 +136,7 @@
    <addaction name="t_act_open"/>
    <addaction name="t_act_setting"/>
    <addaction name="t_act_analyze"/>
+   <addaction name="t_act_compute"/>
    <addaction name="t_act_export"/>
   </widget>
   <action name="t_act_open">
@@ -155,10 +157,10 @@
      <normaloff>:/icon/analyze</normaloff>:/icon/analyze</iconset>
    </property>
    <property name="text">
-    <string>轨迹分析</string>
+    <string>粒子分析</string>
    </property>
    <property name="toolTip">
-    <string>轨迹分析</string>
+    <string>粒子分析</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -221,10 +223,10 @@
      <normaloff>:/icon/analyze</normaloff>:/icon/analyze</iconset>
    </property>
    <property name="text">
-    <string>轨迹分析</string>
+    <string>粒子分析</string>
    </property>
    <property name="toolTip">
-    <string>轨迹分析</string>
+    <string>粒子分析</string>
    </property>
   </action>
   <action name="m_act_export">
@@ -256,6 +258,36 @@
    </property>
    <property name="toolTip">
     <string>关于</string>
+   </property>
+  </action>
+  <action name="m_act_compute">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/compute</normaloff>:/icon/compute</iconset>
+   </property>
+   <property name="text">
+    <string>结果计算</string>
+   </property>
+   <property name="toolTip">
+    <string>结果计算</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="t_act_compute">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/compute</normaloff>:/icon/compute</iconset>
+   </property>
+   <property name="text">
+    <string>结果计算</string>
+   </property>
+   <property name="toolTip">
+    <string>结果计算</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>
