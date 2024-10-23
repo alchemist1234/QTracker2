@@ -1,6 +1,6 @@
 from PySide6.QtGui import QShowEvent
-from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QDialog, QCompleter
+from PySide6.QtCore import Slot, Qt
 
 from src.ui.analyze_result_ui import Ui_dialog_result
 from src.model.models import AnalyzeResultModel
@@ -34,6 +34,10 @@ class ResultDialog(QDialog):
             # 需要把List[int]转成List[str]
             self.ui.cb_particle.addItems([str(i) for i in ids])
             self.ui.cb_particle.setCurrentIndex(0)
+            # 模糊查询
+            completer = QCompleter(self.ui.cb_particle.model())
+            completer.setFilterMode(Qt.MatchFlag.MatchContains)
+            self.ui.cb_particle.setCompleter(completer)
 
     @Slot(int)
     def change_result(self, model_index: int) -> None:
