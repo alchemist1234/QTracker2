@@ -101,12 +101,25 @@
      <height>33</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="menu_file">
     <property name="title">
      <string>文件</string>
     </property>
+    <addaction name="m_act_open"/>
+    <addaction name="m_act_setting"/>
+    <addaction name="m_act_analyze"/>
+    <addaction name="m_act_export"/>
+    <addaction name="separator"/>
+    <addaction name="m_act_exit"/>
    </widget>
-   <addaction name="menu"/>
+   <widget class="QMenu" name="menu_about">
+    <property name="title">
+     <string>关于</string>
+    </property>
+    <addaction name="m_act_about"/>
+   </widget>
+   <addaction name="menu_file"/>
+   <addaction name="menu_about"/>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
   <widget class="QToolBar" name="tool_bar">
@@ -119,12 +132,12 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="act_open"/>
-   <addaction name="act_setting"/>
-   <addaction name="act_analyze"/>
-   <addaction name="act_export"/>
+   <addaction name="t_act_open"/>
+   <addaction name="t_act_setting"/>
+   <addaction name="t_act_analyze"/>
+   <addaction name="t_act_export"/>
   </widget>
-  <action name="act_open">
+  <action name="t_act_open">
    <property name="icon">
     <iconset resource="../../resources.qrc">
      <normaloff>:/icon/open_file</normaloff>:/icon/open_file</iconset>
@@ -136,22 +149,22 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="act_analyze">
+  <action name="t_act_analyze">
    <property name="icon">
     <iconset resource="../../resources.qrc">
      <normaloff>:/icon/analyze</normaloff>:/icon/analyze</iconset>
    </property>
    <property name="text">
-    <string>分析</string>
+    <string>轨迹分析</string>
    </property>
    <property name="toolTip">
-    <string>分析</string>
+    <string>轨迹分析</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="act_setting">
+  <action name="t_act_setting">
    <property name="icon">
     <iconset resource="../../resources.qrc">
      <normaloff>:/icon/settings</normaloff>:/icon/settings</iconset>
@@ -166,19 +179,83 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="act_export">
+  <action name="t_act_export">
    <property name="icon">
     <iconset resource="../../resources.qrc">
      <normaloff>:/icon/export</normaloff>:/icon/export</iconset>
    </property>
    <property name="text">
-    <string>导出</string>
+    <string>导出视频</string>
    </property>
    <property name="toolTip">
-    <string>导出</string>
+    <string>导出视频</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="m_act_open">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/open_file</normaloff>:/icon/open_file</iconset>
+   </property>
+   <property name="text">
+    <string>打开文件</string>
+   </property>
+  </action>
+  <action name="m_act_setting">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/settings</normaloff>:/icon/settings</iconset>
+   </property>
+   <property name="text">
+    <string>设置</string>
+   </property>
+   <property name="toolTip">
+    <string>设置</string>
+   </property>
+  </action>
+  <action name="m_act_analyze">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/analyze</normaloff>:/icon/analyze</iconset>
+   </property>
+   <property name="text">
+    <string>轨迹分析</string>
+   </property>
+   <property name="toolTip">
+    <string>轨迹分析</string>
+   </property>
+  </action>
+  <action name="m_act_export">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/export</normaloff>:/icon/export</iconset>
+   </property>
+   <property name="text">
+    <string>导出视频</string>
+   </property>
+   <property name="toolTip">
+    <string>导出视频</string>
+   </property>
+  </action>
+  <action name="m_act_exit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+   <property name="toolTip">
+    <string>退出</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::QuitRole</enum>
+   </property>
+  </action>
+  <action name="m_act_about">
+   <property name="text">
+    <string>关于</string>
+   </property>
+   <property name="toolTip">
+    <string>关于</string>
    </property>
   </action>
  </widget>

@@ -9,6 +9,7 @@ from src.settings.settings import Settings
 from src.settings.default_settings import SettingKey
 from src.view.setting import SettingDialog
 from src.view.analyze_result import ResultDialog
+from src.view.about import AboutDialog
 from src.view.video_scene import VideoScene
 from src.worker import VideoLoader, Analyzer
 from src.ui.main_ui import Ui_main_window
@@ -34,7 +35,11 @@ class MainWindow(QMainWindow):
         self.scene = VideoScene(self, self.settings)
         self.ui.gv_video.setScene(self.scene)
 
+        # 粒子运动结果窗口
         self.result_dialog = ResultDialog(self.scene)
+
+        # 关于窗口
+        self.about_dialog = None
 
         # 视频加载线程
         self.video_loader_thread = QThread()
@@ -66,11 +71,18 @@ class MainWindow(QMainWindow):
         """
         设置信号/槽连接
         """
+        # 菜单按钮点击
+        self.ui.m_act_open.triggered.connect(self.open_file)
+        self.ui.m_act_setting.triggered.connect(self.open_settings)
+        self.ui.m_act_export.triggered.connect(self.export_video)
+        self.ui.m_act_analyze.triggered.connect(self.analyze_result)
+        self.ui.m_act_exit.triggered.connect(self.close)
+        self.ui.m_act_about.triggered.connect(self.open_about)
         # 工具栏按钮点击
-        self.ui.act_open.triggered.connect(self.open_file)
-        self.ui.act_setting.triggered.connect(self.open_settings)
-        self.ui.act_export.triggered.connect(self.export_video)
-        self.ui.act_analyze.triggered.connect(self.analyze_result)
+        self.ui.t_act_open.triggered.connect(self.open_file)
+        self.ui.t_act_setting.triggered.connect(self.open_settings)
+        self.ui.t_act_export.triggered.connect(self.export_video)
+        self.ui.t_act_analyze.triggered.connect(self.analyze_result)
         # 设置窗口
         # self.setting_dialog.accepted.connect(self.setting_accepted)
         # 视频加载/分析
@@ -259,6 +271,11 @@ class MainWindow(QMainWindow):
                 # 更新配置中的scale值
                 self.settings.set_value(SettingKey.scale, scale)
         self.scene.graphic_items.analyze(fps, scale)
+
+    @Slot()
+    def open_about(self):
+        self.about_dialog = AboutDialog()
+        self.about_dialog.show()
 
     def closeEvent(self, event) -> None:
         """
