@@ -23,7 +23,7 @@ class Ui_wid_button_group(object):
     def setupUi(self, wid_button_group):
         if not wid_button_group.objectName():
             wid_button_group.setObjectName(u"wid_button_group")
-        wid_button_group.resize(172, 280)
+        wid_button_group.resize(172, 310)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -210,6 +210,26 @@ class Ui_wid_button_group(object):
 
         self.vboxLayout.addWidget(self.btn_show_frame_index)
 
+        self.btn_show_result = QPushButton(wid_button_group)
+        self.btn_show_result.setObjectName(u"btn_show_result")
+        sizePolicy1.setHeightForWidth(self.btn_show_result.sizePolicy().hasHeightForWidth())
+        self.btn_show_result.setSizePolicy(sizePolicy1)
+        palette8 = QPalette()
+        palette8.setBrush(QPalette.Active, QPalette.Accent, brush)
+        palette8.setBrush(QPalette.Inactive, QPalette.Accent, brush)
+        palette8.setBrush(QPalette.Disabled, QPalette.Button, brush1)
+        palette8.setBrush(QPalette.Disabled, QPalette.ButtonText, brush2)
+        palette8.setBrush(QPalette.Disabled, QPalette.Accent, brush)
+        self.btn_show_result.setPalette(palette8)
+        icon8 = QIcon()
+        icon8.addFile(u":/icon/result", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_show_result.setIcon(icon8)
+        self.btn_show_result.setIconSize(QSize(16, 20))
+        self.btn_show_result.setCheckable(True)
+        self.btn_show_result.setChecked(False)
+
+        self.vboxLayout.addWidget(self.btn_show_result)
+
 
         self.retranslateUi(wid_button_group)
 
@@ -250,5 +270,9 @@ class Ui_wid_button_group(object):
         self.btn_show_frame_index.setToolTip(QCoreApplication.translate("wid_button_group", u"\u663e\u793a/\u9690\u85cf\u5e27\u53f7", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_show_frame_index.setText("")
+#if QT_CONFIG(tooltip)
+        self.btn_show_result.setToolTip(QCoreApplication.translate("wid_button_group", u"\u663e\u793a/\u9690\u85cf\u5206\u6790\u7ed3\u679c", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_show_result.setText("")
     # retranslateUi
 

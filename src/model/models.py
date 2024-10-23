@@ -1,10 +1,13 @@
 from dataclasses import dataclass
-from typing import Tuple, Any, Dict, List, Collection, Optional
+from typing import Tuple, Any, Dict, List, Collection, Optional, Union
 from enum import Enum
+
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QObject, Signal
 
 from src.view.custom_widget import TrajectoryItem, ParticleGroup, FrameLabelItem
 from src.settings.settings import Settings
 from src.settings.default_settings import SettingKey
+from src.util import common_util
 
 
 class OperationMode(Enum):
@@ -36,6 +39,59 @@ class HistoryParticle:
     center: Tuple[Any, ...]
 
 
+@dataclass
+class AnalyzeResult:
+    """
+    粒子分析数据
+    frame: 帧
+    particle_id: 粒子ID
+    duration: 耗时, 秒
+    x_px: 粒子x轴位置, 像素
+    y_px: 粒子y轴位置, 像素
+    x_micro: 粒子x轴位置, 微米
+    y_micro: 粒子y轴位置, 微米
+    distance: 距离, 微米
+    velocity: 速度, 微米/秒
+    angle: 角度, 与y轴正方向夹角, y轴正方向为0, 顺时针方向转动, 度[0, 360)
+    """
+    frame: int
+    particle_id: int
+    duration: float = 0
+    x_px: float = 0
+    y_px: float = 0
+    x_micro: float = 0
+    y_micro: float = 0
+    distance: float = 0
+    # velocity: float = 0
+    angle: float = 0
+
+    @property
+    def velocity(self):
+        return 0 if self.duration == 0 else self.distance / self.duration
+
+    def data(self, index: int):
+        if index == 0:
+            return self.frame
+        elif index == 1:
+            return self.duration
+        elif index == 2:
+            return float(self.x_px)
+        elif index == 3:
+            return float(self.y_px)
+        elif index == 4:
+            return float(self.x_micro)
+        elif index == 5:
+            return float(self.y_micro)
+        elif index == 6:
+            return float(self.distance)
+        elif index == 7:
+            return float(self.velocity)
+        elif index == 8:
+            return float(self.angle)
+        else:
+            return None
+
+
 class ParticlePositions(object):
     """
     用于记录一个视频每一帧的粒子位置
@@ -44,6 +100,56 @@ class ParticlePositions(object):
     def __init__(self):
         # {粒子ID : {帧ID : (x, y)}}
         self.particles: Dict[int, Dict[int, Tuple[int, int]]] = {}
+
+    def analyze_particle_data(self, fps: float, scale: float,
+                              particle_ids: Union[int, List[int]] = None) -> Dict[int, List[AnalyzeResult]]:
+        """
+        分析所选粒子运动数据
+        :param fps: 帧率
+        :param scale: 比例尺
+        :param particle_ids: 需要分析的粒子, 可以是int(单个粒子), 或者List[int](多个粒子), 为None或者[]时分析所有粒子
+        :return: {粒子ID: List[AnalyzeResult]}
+        """
+        ids = list(self.particles.keys())
+        if isinstance(particle_ids, int):
+            ids = [particle_ids]
+        elif isinstance(particle_ids, list):
+            if len(particle_ids) != 0:
+                ids = particle_ids
+        res = {}
+        for particle_id in ids:
+            res[particle_id] = self.__analyze_particle_data(fps, scale, particle_id)
+        return res
+
+    def __analyze_particle_data(self, fps: float, scale: float,
+                                particle_id: int) -> List[AnalyzeResult]:
+        """
+        分析单个粒子的运动数据
+        :param fps: 帧率
+        :param scale: 比例尺
+        :param particle_id: 粒子ID
+        :return: List[AnalyzeResult]
+        """
+        frame_pos = self.particles.get(particle_id)
+        if len(frame_pos) == 0:
+            return []
+        sorted_frame = list(frame_pos.keys())
+        sorted_frame.sort()
+        res = []
+        pre_data: Optional[AnalyzeResult] = None
+        for frame in sorted_frame:
+            pos = frame_pos[frame]
+            data = AnalyzeResult(frame, particle_id)
+            data.x_px, data.y_px = pos
+            data.x_micro = data.x_px / scale
+            data.y_micro = data.y_px / scale
+            if pre_data:
+                data.distance = common_util.distance(data.x_micro, pre_data.x_micro, data.y_micro, pre_data.y_micro)
+                data.duration = (data.frame - pre_data.frame) / fps
+                data.angle = common_util.angle_to_y(data.x_micro, pre_data.x_micro, data.y_micro, pre_data.y_micro)
+            res.append(data)
+            pre_data = data
+        return res
 
     def add_particle(self, frame_index: int, particle_id: int, pos: Tuple[int, int]) -> None:
         """
@@ -182,21 +288,61 @@ class ParticlePositions(object):
         self.particles.clear()
 
 
-class GraphicItems(object):
+class AnalyzeResultModel(QAbstractTableModel):
+    """
+    用于TableView显示的Model
+    """
+
+    def __init__(self, data: List[AnalyzeResult] = None):
+        super(AnalyzeResultModel, self).__init__()
+        # 数据
+        self._data: List[AnalyzeResult] = [] if data is None else data
+        # 表头
+        self.headers = ['帧', '时间', 'x(px)', 'y(px)', 'x(μm)', 'y(μm)', '距离', '速度', '角度']
+
+    def rowCount(self, parent=None):
+        return len(self._data)
+
+    def columnCount(self, parent=None):
+        return len(self.headers)
+
+    def data(self, index: QModelIndex, role=None):
+        if role == Qt.ItemDataRole.DisplayRole:
+            return self._data[index.row()].data(index.column())
+
+    def headerData(self, section, orientation, role=None):
+        # orientation表是行或列
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            return self.headers[section]
+
+    def reset_data(self, data: List[AnalyzeResult]):
+        self.beginResetModel()
+        self._data = data
+        self.endResetModel()
+
+
+class DataHelper(QObject):
+    sig_result_finished = Signal()
+
     def __init__(self, settings: Settings):
         """
         存放所有帧的绘制Item
         :param settings: 配置信息
         """
+        super().__init__()
         self.particle_positions = ParticlePositions()
         self.settings: Settings = settings
-        # {帧ID: {粒子ID: 粒子Group, ...}, ...}
+        # {帧: {粒子ID: 粒子Group, ...}, ...}
         self.particle_group: Dict[int, Dict[int, ParticleGroup]] = {}
-        # {帧ID: {粒子ID: 轨迹Item, ...}, ...}
+        # {帧: {粒子ID: 轨迹Item, ...}, ...}
         # 每帧轨迹ID只保存当前帧新增轨迹，显示时需要把小于等于当前帧所有轨迹Item全部展示
         self.trajectory_items: Dict[int, Dict[int, TrajectoryItem]] = {}
-        # 帧ID对象
+        # {帧: FrameLabelItem, ...}
+        # 帧标签对象
         self.frame_label_items: Dict[int, FrameLabelItem] = {}
+        # {粒子ID: List[AnalyzeResult], ...}
+        # 分析结果
+        self.analyze_result: Dict[int, List[AnalyzeResult]] = {}
 
     def add_particle(self, frame_index: int, particle_id: int, pos: Tuple[int, int]) -> None:
         """
@@ -220,7 +366,11 @@ class GraphicItems(object):
         self.particle_positions.add_frame_particles(frame_index, particles)
         self.update_frame_items(frame_index)
 
-    def add_frame_label(self, frame_index: int):
+    def add_frame_label(self, frame_index: int) -> None:
+        """
+        添加帧标签对象
+        :param frame_index: 帧
+        """
         self.frame_label_items[frame_index] = FrameLabelItem(self.settings, frame_index)
 
     def remove_particle(self, frame_index: int, particle_id: int) -> None:
@@ -273,7 +423,6 @@ class GraphicItems(object):
         :param particle_ids: 粒子ID
         :param vector: 位移 (dx, dy)
         """
-        print(f'move particles {particle_ids} at frame {frame_index} by {vector}')
         updated_frames = {frame_index}
         for particle_id in particle_ids:
             self.particle_positions.move_particle_by(frame_index, particle_id, vector)
@@ -304,7 +453,7 @@ class GraphicItems(object):
     def __update_particle_items(self, frame_index: int) -> None:
         """
         更新帧粒子Item、标记Item
-        :param frame_index: 帧ID
+        :param frame_index: 帧
         """
         frame_particles = self.particle_positions.get_frame_particles(frame_index)
         if frame_index in self.particle_group:
@@ -318,7 +467,7 @@ class GraphicItems(object):
     def __update_trajectory_items(self, frame_index: int) -> None:
         """
         更新帧轨迹Item
-        :param frame_index: 帧ID
+        :param frame_index: 帧
         """
         particles = self.particle_positions.get_particles_before_frame(frame_index)
         if frame_index in self.trajectory_items:
@@ -336,7 +485,7 @@ class GraphicItems(object):
     def get_particle_items(self, frame_index: int) -> List[ParticleGroup]:
         """
         返回一帧所有粒子Item对象列表
-        :param frame_index: 帧ID
+        :param frame_index: 帧
         :return: 粒子Item对象列表
         """
         if frame_index in self.particle_group:
@@ -348,7 +497,7 @@ class GraphicItems(object):
     def get_trajectory_items(self, frame_index: int) -> List[TrajectoryItem]:
         """
         返回一帧所有轨迹Item对象列表
-        :param frame_index: 帧ID
+        :param frame_index: 帧
         :return: 轨迹Item对象列表
         """
         filtered_particles = self.settings.list_value(SettingKey.index_filter)
@@ -357,8 +506,38 @@ class GraphicItems(object):
                 if particle_id in filtered_particles or not filtered_particles]
 
     def get_frame_label_item(self, frame_index: int) -> Optional[FrameLabelItem]:
+        """
+        获取帧标签Item
+        :param frame_index: 帧
+        :return: 帧标签Item
+        """
         show = self.settings.boolean_value(SettingKey.show_frame_label)
         return self.frame_label_items.get(frame_index) if show else None
+
+    def analyze(self, fps: int, scale: float) -> None:
+        """
+        分析粒子运动数据
+        :param fps: 视频帧率
+        :param scale: 视频比例尺
+        """
+        self.analyze_result = self.particle_positions.analyze_particle_data(fps, scale)
+
+    def get_analyze_result(self, particle_id: int) -> List[AnalyzeResult]:
+        """
+        获取粒子计算结果
+        :param particle_id: 粒子ID
+        :return: 粒子每帧数据
+        """
+        return self.analyze_result[particle_id] if particle_id in self.analyze_result else []
+
+    def get_all_particle_ids(self) -> List[int]:
+        """
+        获取所有分析结果粒子ID
+        :return: 粒子ID列表，按从小到大排序
+        """
+        particle_ids = list(self.analyze_result.keys())
+        particle_ids.sort()
+        return particle_ids
 
     def clear(self) -> None:
         """
@@ -366,3 +545,5 @@ class GraphicItems(object):
         """
         self.particle_positions.clear()
         self.trajectory_items.clear()
+        self.frame_label_items.clear()
+        self.analyze_result.clear()

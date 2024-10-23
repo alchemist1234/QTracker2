@@ -124,10 +124,10 @@ class SettingDialog(QDialog):
         self.ui.spb_kernel_size.setValue(source_settings.int_value(SettingKey.kernel_size))
         self.ui.chb_split_particles.setChecked(source_settings.boolean_value(SettingKey.split_circular_particles))
         self.ui.spb_particle_radius_for_split.setValue(source_settings.int_value(SettingKey.split_radius))
-        self.ui.chb_fit_to_screen.setChecked(source_settings.boolean_value(SettingKey.fit_to_screen))
         self.ui.spb_skip_frames.setValue(source_settings.int_value(SettingKey.skip_frames))
         self.ui.spb_from_frames.setValue(source_settings.int_value(SettingKey.from_frames))
         self.ui.spb_to_frames.setValue(source_settings.int_value(SettingKey.to_frames))
+        self.ui.dspb_scale.setValue(source_settings.float_value(SettingKey.scale))
         # Display
         self.ui.lb_particle_color_display.set_color(source_settings.value(SettingKey.particle_color))
         self.ui.spb_particle_size.setValue(source_settings.int_value(SettingKey.particle_size))
@@ -169,10 +169,10 @@ class SettingDialog(QDialog):
         target_settings.set_value(SettingKey.kernel_size, self.ui.spb_kernel_size.value())
         target_settings.set_value(SettingKey.split_circular_particles, self.ui.chb_split_particles.isChecked())
         target_settings.set_value(SettingKey.split_radius, self.ui.spb_particle_radius_for_split.value())
-        target_settings.set_value(SettingKey.fit_to_screen, self.ui.chb_fit_to_screen.isChecked())
         target_settings.set_value(SettingKey.skip_frames, self.ui.spb_skip_frames.value())
         target_settings.set_value(SettingKey.from_frames, self.ui.spb_from_frames.value())
         target_settings.set_value(SettingKey.to_frames, self.ui.spb_to_frames.value())
+        target_settings.set_value(SettingKey.scale, self.ui.dspb_scale.value())
 
         # Display
         target_settings.set_value(SettingKey.particle_color, self.ui.lb_particle_color_display.colors)

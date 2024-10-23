@@ -25,6 +25,10 @@ class VideoLoader(QObject):
 
     @Slot(str)
     def load(self, path: str) -> None:
+        """
+        加载视频文件
+        :param path: 视频文件地址
+        """
         video = cv2.VideoCapture(path)
         # get meta info
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))

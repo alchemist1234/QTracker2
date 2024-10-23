@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icon">
+    <file alias="result">resources/icons/result.png</file>
     <file alias="add">resources/icons/add-circle-line.png</file>
     <file alias="index">resources/icons/index.png</file>
     <file alias="bubble">resources/icons/chart-bubble.png</file>

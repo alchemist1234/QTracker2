@@ -15,7 +15,6 @@ class SettingItem:
     section: str
     key: str
     default_value: Any
-    # TODO 还未想好怎么实现
     save_to_file: bool = True
 
 class SettingKey(Enum):
@@ -39,7 +38,7 @@ class SettingKey(Enum):
     kernel_size = SettingItem(section='analyze', key='kernel_size', default_value=5)
     split_circular_particles = SettingItem(section='analyze', key='split_circular_particles', default_value=False)
     split_radius = SettingItem(section='analyze', key='split_radius', default_value=10)
-    fit_to_screen = SettingItem(section='analyze', key='fit_to_screen', default_value=True)
+    # fit_to_screen = SettingItem(section='analyze', key='fit_to_screen', default_value=True)
     show_binary_image = SettingItem(section='analyze', key='show_binary_image', default_value=False)
     skip_frames = SettingItem(section='analyze', key='skip_frames', default_value=0)
     from_frames = SettingItem(section='analyze', key='from_frames', default_value=1)
@@ -47,6 +46,8 @@ class SettingKey(Enum):
     file_path = SettingItem(section='analyze', key='file_path', default_value=None)
     dir_path = SettingItem(section='analyze', key='dir_path', default_value=None)
     frame_quality = SettingItem(section='analyze', key='frame_quality', default_value=80)
+    scale = SettingItem(section='analyze', key='scale', default_value=0)
+    fps = SettingItem(section='analyze', key='fps', default_value=0, save_to_file=False)
 
     particle_color = SettingItem(section='display', key='particle_color', default_value=QColor(0, 255, 0))
     particle_size = SettingItem(section='display', key='particle_size', default_value=4)

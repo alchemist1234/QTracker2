@@ -4,7 +4,8 @@ from PySide6.QtGui import QBrush, QColor
 from PySide6.QtCore import QRandomGenerator
 from PySide6.QtWidgets import QGraphicsSimpleTextItem, QGraphicsScene, QWidget, QGraphicsItem, QGraphicsPixmapItem
 from PySide6.QtCore import Qt
-from src.model.models import ParticlePositions, GraphicItems, Settings, MarkItem
+from src.model.models import ParticlePositions, DataHelper, Settings, MarkItem
+import pandas as pd
 
 total_frames = 500
 total_particles = 200
@@ -32,7 +33,7 @@ def generate_particles(total: int, per: int) -> Dict[int, Tuple[int, int]]:
 if __name__ == '__main__':
     pos = generate_all_particles()
     settings = Settings('D:\\workspaces\\projects\\study\\python\\QTracker2\\config.ini')
-    graphic_items = GraphicItems(pos, settings)
+    graphic_items = DataHelper(pos, settings)
 
     t1 = time.time()
     for i in range(total_frames):
@@ -41,3 +42,7 @@ if __name__ == '__main__':
     t2 = time.time()
     print(t2 - t1)
     print('finish')
+    df = pd.read_csv('')
+    for _, row in df.iterrows():
+        data = row.tolist()
+

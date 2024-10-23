@@ -8,6 +8,7 @@ from PySide6.QtGui import QIcon
 from src.settings.settings import Settings
 from src.settings.default_settings import SettingKey
 from src.view.setting import SettingDialog
+from src.view.analyze_result import ResultDialog
 from src.view.video_scene import VideoScene
 from src.worker import VideoLoader, Analyzer
 from src.ui.main_ui import Ui_main_window
@@ -25,13 +26,15 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.icon_play = QIcon(':/icon/play')
         self.icon_pause = QIcon(':/icon/pause')
-        # self.icon_pause.addFile(u":/icon/pause", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         # 从设置文件获取窗口大小
         self.resize(settings.int_value(SettingKey.main_width), settings.int_value(SettingKey.main_height))
         self.setting_dialog = SettingDialog(settings)
+
         # 设置Graphics相关组件
         self.scene = VideoScene(self, self.settings)
         self.ui.gv_video.setScene(self.scene)
+
+        self.result_dialog = ResultDialog(self.scene)
 
         # 视频加载线程
         self.video_loader_thread = QThread()
@@ -67,6 +70,7 @@ class MainWindow(QMainWindow):
         self.ui.act_open.triggered.connect(self.open_file)
         self.ui.act_setting.triggered.connect(self.open_settings)
         self.ui.act_export.triggered.connect(self.export_video)
+        self.ui.act_analyze.triggered.connect(self.analyze_result)
         # 设置窗口
         # self.setting_dialog.accepted.connect(self.setting_accepted)
         # 视频加载/分析
@@ -98,6 +102,7 @@ class MainWindow(QMainWindow):
         self.ui.gv_video.btn_group.ui.btn_show_mark.clicked.connect(self.scene.set_mark_visible)
         self.ui.gv_video.btn_group.ui.btn_show_trajectory.clicked.connect(self.scene.set_trajectory_visible)
         self.ui.gv_video.btn_group.ui.btn_show_frame_index.clicked.connect(self.scene.set_frame_label_visible)
+        self.ui.gv_video.btn_group.ui.btn_show_result.clicked.connect(self.show_result)
         self.ui.le_filter.textChanged.connect(self.scene.set_filter)
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
@@ -163,6 +168,8 @@ class MainWindow(QMainWindow):
         self.ui.sl_frame.setMaximum(meta_info.frame_count)
         if self.ui.sl_frame.value() > meta_info.frame_count:
             self.ui.sl_frame.setValue(meta_info.frame_count)
+        # 更新配置中的FPS
+        self.settings.set_value(SettingKey.fps, meta_info.fps)
 
     @Slot(int)
     def update_slider_value(self, value: int) -> None:
@@ -204,7 +211,10 @@ class MainWindow(QMainWindow):
                 self.ui.btn_play.setIcon(self.icon_pause)
 
     @Slot()
-    def export_video(self):
+    def export_video(self) -> None:
+        """
+        导出视频
+        """
         file_dir = ''
         file_name, file_type = QFileDialog.getSaveFileName(self, 'Export Video', file_dir,
                                                            filter='AVI File(*.avi);;FLV File(*.flv);;OGV File(*.ogv)')
@@ -219,6 +229,36 @@ class MainWindow(QMainWindow):
             self.waiting_dialog.setWindowModality(Qt.WindowModality.WindowModal)
             self.waiting_dialog.show()
             self.scene.export(file_path, self.video_meta.fps)
+
+    @Slot(bool)
+    def show_result(self, show: bool) -> None:
+        """
+        显示/隐藏结果弹窗
+        :param show: 是否显示
+        """
+        self.result_dialog.show() if show else self.result_dialog.hide()
+
+    @Slot()
+    def analyze_result(self) -> None:
+        """
+        分析粒子动动结果
+        """
+        fps = self.settings.int_value(SettingKey.fps)
+        scale = self.settings.float_value(SettingKey.scale)
+        if fps <= 0:
+            fps, ok = QInputDialog.getInt(self, '未检测到FPS, 请输入', 'FPS')
+            if not ok or fps <= 0:
+                QMessageBox.warning(self, '结束', '无效FPS, 结果分析终止')
+                return
+        if scale <= 0:
+            scale, ok = QInputDialog.getDouble(self, '未设置比例尺, 请输入', '比例尺(px/μm)')
+            if not ok or scale <= 0:
+                QMessageBox.warning(self, '结束', '无效比例尺, 结果分析终止')
+                return
+            else:
+                # 更新配置中的scale值
+                self.settings.set_value(SettingKey.scale, scale)
+        self.scene.graphic_items.analyze(fps, scale)
 
     def closeEvent(self, event) -> None:
         """

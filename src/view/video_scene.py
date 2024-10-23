@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSce
 from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants, QPainter
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
-from src.model.models import GraphicItems, OperationMode
+from src.model.models import DataHelper, OperationMode
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.util.common_util import split_indexes_text
@@ -37,7 +37,7 @@ class VideoScene(QGraphicsScene):
         # 用base64存储图像数据，用QImage或者QPixmap存储内存占用过大
         self.frames_base64 = {}
         # GraphicItem存储容器
-        self.graphic_items = GraphicItems(self.settings)
+        self.graphic_items = DataHelper(self.settings)
         # 当前添加到QGraphicsScene中的粒子Item
         self.particle_items = []
         # 当前添加到QGraphicsScene中的轨迹Item

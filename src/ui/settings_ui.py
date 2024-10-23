@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFontComboBox,
-    QGroupBox, QHBoxLayout, QLabel, QLayout,
-    QPushButton, QSizePolicy, QSpacerItem, QSpinBox,
-    QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QDoubleSpinBox,
+    QFontComboBox, QGroupBox, QHBoxLayout, QLabel,
+    QLayout, QPushButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from src.view.custom_widget import ColorLabel
 
@@ -360,12 +360,20 @@ class Ui_Dialog(object):
         self.verticalLayout6.setContentsMargins(8, 8, 8, 8)
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.chb_fit_to_screen = QCheckBox(self.groupBox_5)
-        self.chb_fit_to_screen.setObjectName(u"chb_fit_to_screen")
+        self.lb_scale = QLabel(self.groupBox_5)
+        self.lb_scale.setObjectName(u"lb_scale")
 
-        self.horizontalLayout_9.addWidget(self.chb_fit_to_screen)
+        self.horizontalLayout_9.addWidget(self.lb_scale)
 
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        self.dspb_scale = QDoubleSpinBox(self.groupBox_5)
+        self.dspb_scale.setObjectName(u"dspb_scale")
+        self.dspb_scale.setDecimals(3)
+        self.dspb_scale.setMaximum(99999999.000000000000000)
+        self.dspb_scale.setSingleStep(0.010000000000000)
+
+        self.horizontalLayout_9.addWidget(self.dspb_scale)
+
+        self.horizontalSpacer_7 = QSpacerItem(80, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_9.addItem(self.horizontalSpacer_7)
 
@@ -392,6 +400,10 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_10.addWidget(self.lb_from_frames)
 
+        self.horizontalSpacer_12 = QSpacerItem(20, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_10.addItem(self.horizontalSpacer_12)
+
         self.spb_from_frames = QSpinBox(self.groupBox_5)
         self.spb_from_frames.setObjectName(u"spb_from_frames")
         sizePolicy.setHeightForWidth(self.spb_from_frames.sizePolicy().hasHeightForWidth())
@@ -400,10 +412,18 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_10.addWidget(self.spb_from_frames)
 
+        self.horizontalSpacer_11 = QSpacerItem(104, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_10.addItem(self.horizontalSpacer_11)
+
         self.lb_to_frames = QLabel(self.groupBox_5)
         self.lb_to_frames.setObjectName(u"lb_to_frames")
 
         self.horizontalLayout_10.addWidget(self.lb_to_frames)
+
+        self.horizontalSpacer_13 = QSpacerItem(16, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_10.addItem(self.horizontalSpacer_13)
 
         self.spb_to_frames = QSpinBox(self.groupBox_5)
         self.spb_to_frames.setObjectName(u"spb_to_frames")
@@ -682,7 +702,7 @@ class Ui_Dialog(object):
         self.chb_split_particles.setText(QCoreApplication.translate("Dialog", u"\u5206\u5272\u7c92\u5b50", None))
         self.lb_particle_radius_for_split.setText(QCoreApplication.translate("Dialog", u"\u5206\u5272\u7c92\u5b50\u5c3a\u5bf8", None))
         self.groupBox_5.setTitle("")
-        self.chb_fit_to_screen.setText(QCoreApplication.translate("Dialog", u"\u9002\u5e94\u5c4f\u5e55", None))
+        self.lb_scale.setText(QCoreApplication.translate("Dialog", u"\u6bd4\u4f8b\u5c3a(px/\u03bcm)", None))
         self.lb_skip_frames.setText(QCoreApplication.translate("Dialog", u"\u8df3\u8fc7\u5e27", None))
         self.lb_from_frames.setText(QCoreApplication.translate("Dialog", u"\u8d77\u59cb\u5e27", None))
         self.lb_to_frames.setText(QCoreApplication.translate("Dialog", u"\u7ed3\u675f\u5e27", None))
