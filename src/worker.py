@@ -112,9 +112,6 @@ class Analyzer(QObject):
         """
         开始分析视频
         """
-        self.data_queue.clear()
-        self.history_particles.clear()
-        self.max_label = 0
         self.working = True
         self.receiving = True
         if not self.running:
@@ -183,6 +180,7 @@ class Analyzer(QObject):
                 frame_particles[self.max_label] = center_tuple
                 self.history_particles[self.max_label] = HistoryParticle(frame_index, center_tuple)
                 self.max_label += 1
+        print(f'frame analyzed: {frame_index}, particles: {len(frame_particles)}')
         return frame_particles
 
     def same_particle(self, old_center, new_center) -> bool:
