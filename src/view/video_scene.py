@@ -107,7 +107,11 @@ class VideoScene(QGraphicsScene):
             next_frame = 0
         self.change_display(next_frame)
 
-    def sorted_frame_indexes(self):
+    def sorted_frame_indexes(self) -> List[int]:
+        """
+        当前所有帧号(顺序)
+        :return: 有序帧号
+        """
         frame_indexes = list(self.frames_base64.keys())
         frame_indexes.sort()
         return frame_indexes
@@ -128,6 +132,7 @@ class VideoScene(QGraphicsScene):
             self.removeItem(self.frame_label_item)
         self.frame_label_item = self.data_helper.get_frame_label_item(frame_index)
         if self.frame_label_item:
+            self.frame_label_item.refresh()
             self.addItem(self.frame_label_item)
 
     def __change_particle_display(self, frame_index: int) -> None:
@@ -137,13 +142,9 @@ class VideoScene(QGraphicsScene):
         """
         for item in self.particle_items:
             self.removeItem(item)
-        # 设置显示/隐藏
-        particle_shown = self.settings.boolean_value(SettingKey.show_particle)
-        mark_shown = self.settings.boolean_value(SettingKey.show_mark)
         self.particle_items = self.data_helper.get_particle_items(frame_index)
         for item in self.particle_items:
-            item.set_particle_visible(particle_shown)
-            item.set_mark_visible(mark_shown)
+            item.refresh()
             self.addItem(item)
 
     def __change_trajectory_display(self, frame_index: int) -> None:
@@ -155,7 +156,7 @@ class VideoScene(QGraphicsScene):
             self.removeItem(item)
         self.trajectory_items = self.data_helper.get_trajectory_items(frame_index)
         for item in self.trajectory_items:
-            item.setVisible(self.settings.boolean_value(SettingKey.show_trajectory))
+            item.refresh()
             self.addItem(item)
 
     @Slot(int, list)
@@ -393,3 +394,9 @@ class VideoScene(QGraphicsScene):
 
         writer.release()
         self.sig_export_finish.emit()
+
+    def refresh_items(self) -> None:
+        """
+        显示设置更新后, 刷新item显示
+        """
+        self.change_display(self.current_frame_index)

@@ -1,14 +1,13 @@
 import math
 from typing import Union, List
 
-from PySide6.QtCore import Qt, Signal, QPoint
-from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont
+from PySide6.QtCore import Qt, Signal, QPoint, QRectF
+from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont, QPen
 from PySide6.QtWidgets import (QLabel, QWidget, QHBoxLayout, QListView, QSizePolicy, QSpacerItem, QGraphicsEllipseItem,
                                QGraphicsItem, QGraphicsLineItem, QGraphicsSimpleTextItem, QGraphicsItemGroup)
 
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
-from src.util.graphic_util import SettingWidgetHelper
 from src.ui.view_btn_grp_ui import Ui_wid_button_group
 
 
@@ -147,18 +146,48 @@ class ParticleItem(QGraphicsEllipseItem):
         radius = settings.int_value(SettingKey.particle_size)
         super().__init__(x - radius, y - radius, radius * 2, radius * 2)
         self.settings = settings
-        self.settings_helper = SettingWidgetHelper(settings)
         self.index = index
+        self.center_x = x
+        self.center_y = y
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setToolTip(str(index))
-        self.setBrush(self.settings_helper.particle_brush(index))
-        self.setPen(self.settings_helper.particle_pen(index))
-        self.mark = None
+        pen = QPen()
+        pen.setStyle(Qt.PenStyle.SolidLine)
+        pen.setWidth(0)
+        self.setPen(pen)
+        brush = QBrush()
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(brush)
+        self.refresh()
 
     def center(self) -> QPoint:
-        rect = self.rect()
-        return QPoint(int(rect.x() + rect.width() / 2), int(rect.y() + rect.height() / 2))
+        """
+        获取粒子中心位置
+        """
+        return QPoint(self.center_x, self.center_y)
+
+    def refresh(self) -> None:
+        """
+        刷新显示
+        """
+        # 颜色
+        colors = self.settings.list_value(SettingKey.particle_color)
+        colors = [QColor(c) for c in colors]
+        color = colors[self.index % len(colors)]
+        # 需要重新设置brush和pen，直接self.brush().setColor()不会生效
+        brush = self.brush()
+        brush.setColor(color)
+        self.setBrush(brush)
+        pen = self.pen()
+        pen.setColor(color)
+        self.setPen(pen)
+        # 大小
+        size = self.settings.int_value(SettingKey.particle_size)
+        self.setRect(QRectF(self.center_x - size, self.center_y - size, size * 2, size * 2))
+        # 显示/隐藏
+        show_particle = self.settings.boolean_value(SettingKey.show_particle)
+        self.setVisible(show_particle)
 
 
 class MarkItem(QGraphicsSimpleTextItem):
@@ -174,24 +203,48 @@ class MarkItem(QGraphicsSimpleTextItem):
         """
         super().__init__(prefix + str(index) + suffix)
         self.settings = settings
-        self.settings_helper = SettingWidgetHelper(settings)
         self.index = index
+        self.center_x = center_x
+        self.center_y = center_y
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        brush = QBrush()
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(brush)
+        self.refresh()
+
+    def refresh(self):
+        """
+        刷新显示
+        """
+        # 字体
         font = QFont(self.settings.value(SettingKey.mark_font))
         font.setPointSize(self.settings.int_value(SettingKey.mark_size))
         self.setFont(font)
-        self.setBrush(self.settings_helper.mark_brush(index))
+        # 颜色
+        same_color_with_particle = self.settings.boolean_value(SettingKey.same_mark_color_with_particle)
+        if same_color_with_particle:
+            colors = self.settings.list_value(SettingKey.particle_color)
+        else:
+            colors = self.settings.list_value(SettingKey.mark_color)
+        colors = [QColor(c) for c in colors]
+        color = colors[self.index % len(colors)]
+        brush = self.brush()
+        brush.setColor(color)
+        self.setBrush(brush)
+        # 位置
         radius = self.settings.int_value(SettingKey.particle_size)
-        x = center_x - radius - self.boundingRect().width()
-        y = center_y - radius - self.boundingRect().height()
+        x = self.center_x - radius - self.boundingRect().width()
+        y = self.center_y - radius - self.boundingRect().height()
         if x < 0:
-            x = center_x + radius
+            x = self.center_x + radius
         if y < 0:
-            y = center_y + radius
+            y = self.center_y + radius
         self.setX(x)
         self.setY(y)
-
+        # 显示/隐藏
+        show_mark = self.settings.boolean_value(SettingKey.show_mark)
+        self.setVisible(show_mark)
 
 class ParticleGroup(QGraphicsItemGroup):
     def __init__(self, settings: Settings, index: int, x, y):
@@ -204,7 +257,6 @@ class ParticleGroup(QGraphicsItemGroup):
         """
         super().__init__()
         self.settings = settings
-        self.setting_helper = SettingWidgetHelper(settings)
         self.index = index
         self.setX(x)
         self.setY(y)
@@ -215,11 +267,17 @@ class ParticleGroup(QGraphicsItemGroup):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
 
-    def set_particle_visible(self, visible: bool):
-        self.particle.setVisible(visible)
-
-    def set_mark_visible(self, visible: bool):
-        self.mark.setVisible(visible)
+    def refresh(self) -> None:
+        """
+        刷新粒子和标记组
+        """
+        # 必须先解组，再成组，不然位置会出现问题
+        self.removeFromGroup(self.particle)
+        self.removeFromGroup(self.mark)
+        self.particle.refresh()
+        self.mark.refresh()
+        self.addToGroup(self.particle)
+        self.addToGroup(self.mark)
 
 
 class TrajectoryItem(QGraphicsLineItem):
@@ -236,12 +294,32 @@ class TrajectoryItem(QGraphicsLineItem):
         super().__init__(x1, y1, x2, y2)
         self.settings = settings
         self.index = index
-        self.setting_helper = SettingWidgetHelper(settings)
         self.distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-        self.setPen(self.setting_helper.trajectory_pen(index))
+        pen = QPen()
+        pen.setStyle(Qt.PenStyle.SolidLine)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        self.setPen(pen)
+        self.refresh()
 
-    def update_pen(self):
-        self.setPen(self.setting_helper.trajectory_pen(self.index))
+    def refresh(self):
+        """
+        刷新显示
+        """
+        # 颜色
+        same_color_with_particle = self.settings.boolean_value(SettingKey.same_trajectory_color_with_particle)
+        if same_color_with_particle:
+            colors = self.settings.list_value(SettingKey.particle_color)
+        else:
+            colors = self.settings.list_value(SettingKey.trajectory_color)
+        colors = [QColor(c) for c in colors]
+        color = colors[self.index % len(colors)]
+        pen = self.pen()
+        pen.setColor(color)
+        self.setPen(pen)
+        # 显示/隐藏
+        show_trajectory = self.settings.boolean_value(SettingKey.show_trajectory)
+        self.setVisible(show_trajectory)
 
 class FrameLabelItem(QGraphicsSimpleTextItem):
     def __init__(self, settings: Settings, index: int, x = 0, y = 0):
@@ -254,14 +332,29 @@ class FrameLabelItem(QGraphicsSimpleTextItem):
         """
         super().__init__(str(index))
         self.settings = settings
-        self.setting_helper = SettingWidgetHelper(settings)
         self.index = index
         self.setX(x)
         self.setY(y)
+        brush = QBrush()
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(brush)
+        self.refresh()
+
+    def refresh(self):
+        """
+        刷新显示
+        """
+        # 字体
         font = QFont(self.settings.value(SettingKey.frame_label_font))
         font.setPointSize(self.settings.int_value(SettingKey.frame_label_size))
-        self.setBrush(self.setting_helper.frame_label_brush(index))
         self.setFont(font)
-
-    def update_brush(self):
-        self.setBrush(self.setting_helper.frame_label_brush(self.index))
+        # 颜色
+        colors = self.settings.list_value(SettingKey.frame_label_color)
+        colors = [QColor(c) for c in colors]
+        color = colors[self.index % len(colors)]
+        brush = self.brush()
+        brush.setColor(color)
+        self.setBrush(brush)
+        # 显示/隐藏
+        show_frame_label = self.settings.boolean_value(SettingKey.show_frame_label)
+        self.setVisible(show_frame_label)

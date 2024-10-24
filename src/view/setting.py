@@ -1,7 +1,7 @@
 from typing import List
 
 from PySide6.QtWidgets import QDialog, QFileDialog
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Slot, Qt, Signal
 from PySide6.QtGui import QColor
 
 from src.ui.settings_ui import Ui_Dialog
@@ -12,6 +12,9 @@ from src.view.color_editor import ColorEditor
 
 
 class SettingDialog(QDialog):
+    # 显示设置改变信号
+    sig_display_settings_changed = Signal()
+
     def __init__(self, settings: Settings):
         """
         设置对话框
@@ -24,6 +27,7 @@ class SettingDialog(QDialog):
         self.ui.lb_particle_color_display.setFixedSize(76, 20)
         self.ui.lb_mark_color_display.setFixedSize(76, 20)
         self.ui.lb_trajectory_color_display.setFixedSize(76, 20)
+        self.ui.lb_frame_label_display.setFixedSize(76, 20)
         self.load_settings()
         self.setup_connects()
 
@@ -35,6 +39,7 @@ class SettingDialog(QDialog):
         self.ui.lb_mark_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_mark_color_display))
         self.ui.lb_trajectory_color_display.clicked.connect(
             lambda x: self.edit_colors(self.ui.lb_trajectory_color_display))
+        self.ui.lb_frame_label_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_frame_label_display))
         self.ui.chb_same_mark_color_with_particle.checkStateChanged.connect(self.mark_color_state)
         self.ui.chb_same_trajectory_color_with_particle.checkStateChanged.connect(self.trajectory_color_state)
         # 按钮
@@ -149,6 +154,25 @@ class SettingDialog(QDialog):
         保存配置信息到Setting对象，并刷新配置文件
         :param settings 需要保存的配置文件, 默认为程序当前目录下config.ini
         """
+        # 判断显示设置是否有改变
+        display_updated = False
+        if settings is None:
+            if self.settings.value(SettingKey.particle_color) != self.ui.lb_particle_color_display.colors \
+                    or self.settings.int_value(SettingKey.particle_size) != self.ui.spb_particle_size.value() \
+                    or self.settings.value(SettingKey.mark_color) != self.ui.lb_mark_color_display.colors \
+                    or self.settings.int_value(SettingKey.mark_size) != self.ui.spb_mark_size.value() \
+                    or self.settings.boolean_value(
+                SettingKey.same_mark_color_with_particle) != self.ui.chb_same_mark_color_with_particle.isChecked() \
+                    or self.settings.value(SettingKey.mark_font) != self.ui.fcb_mark_font.currentFont() \
+                    or self.settings.value(SettingKey.trajectory_color) != self.ui.lb_trajectory_color_display.colors \
+                    or self.settings.int_value(SettingKey.trajectory_width) != self.ui.spb_trajectory_width.value() \
+                    or self.settings.boolean_value(
+                SettingKey.same_trajectory_color_with_particle) != self.ui.chb_same_trajectory_color_with_particle.isChecked() \
+                    or self.settings.value(SettingKey.frame_label_color) != self.ui.lb_frame_label_display.colors \
+                    or self.settings.int_value(SettingKey.frame_label_size) != self.ui.spb_frame_label_size.value() \
+                    or self.settings.value(SettingKey.frame_label_font) != self.ui.fcb_frame_label_font.currentFont():
+                display_updated = True
+
         target_settings = settings if settings else self.settings
         # analyze
         target_settings.set_value(SettingKey.median_blur, self.ui.spb_median_blur.value())
@@ -189,3 +213,7 @@ class SettingDialog(QDialog):
         target_settings.set_value(SettingKey.frame_label_color, self.ui.lb_frame_label_display.colors)
         target_settings.set_value(SettingKey.frame_label_size, self.ui.spb_frame_label_size.value())
         target_settings.set_value(SettingKey.frame_label_font, self.ui.fcb_frame_label_font.currentFont())
+
+        # 显示设置变动，通知更新页面显示
+        if display_updated:
+            self.sig_display_settings_changed.emit()

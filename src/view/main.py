@@ -89,6 +89,8 @@ class MainWindow(QMainWindow):
         self.ui.t_act_analyze.triggered.connect(lambda: self.pre_analyze(self.file_path))
         self.ui.t_act_compute.triggered.connect(self.analyze_result)
         self.ui.t_act_export.triggered.connect(self.export_video)
+        # 设置
+        self.setting_dialog.sig_display_settings_changed.connect(self.scene.refresh_items)
         # 视频加载/分析
         self.analyzer_thread.started.connect(self.analyzer.start_and_run)
         self.analyzer_thread.finished.connect(self.analyzer.stop)
