@@ -1,8 +1,8 @@
 import csv
 
-from PySide6.QtGui import QShowEvent
+from PySide6.QtGui import QShowEvent, QCloseEvent
 from PySide6.QtWidgets import QDialog, QCompleter, QInputDialog, QFileDialog
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Signal, Slot, Qt
 
 from src.ui.analyze_result_ui import Ui_dialog_result
 from src.model.models import AnalyzeResultModel
@@ -14,6 +14,7 @@ class ResultDialog(QDialog):
     """
     粒子运动结果窗口
     """
+    sig_closed = Signal()
 
     def __init__(self, scene: VideoScene):
         """
@@ -28,6 +29,7 @@ class ResultDialog(QDialog):
 
         self.ui.cb_particle.currentIndexChanged.connect(self.change_result)
         self.ui.btn_export.clicked.connect(self.export)
+        self.ui.btn_close.clicked.connect(self.close)
 
     def showEvent(self, event: QShowEvent) -> None:
         """
@@ -44,6 +46,14 @@ class ResultDialog(QDialog):
             completer = QCompleter(self.ui.cb_particle.model())
             completer.setFilterMode(Qt.MatchFlag.MatchContains)
             self.ui.cb_particle.setCompleter(completer)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """
+        关闭事件, 通知外部更新按钮状态
+        :param event: 关闭事件
+        """
+        self.sig_closed.emit()
+        super().closeEvent(event)
 
     @Slot(int)
     def change_result(self, model_index: int) -> None:

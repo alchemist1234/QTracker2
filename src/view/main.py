@@ -92,7 +92,6 @@ class MainWindow(QMainWindow):
         # 设置
         self.setting_dialog.sig_display_settings_changed.connect(self.scene.refresh_items)
         # 视频加载/分析
-        self.analyzer_thread.started.connect(self.analyzer.start_and_run)
         self.analyzer_thread.finished.connect(self.analyzer.stop)
         self.sig_update_path.connect(self.update_file_path)
         self.sig_pre_analyze.connect(self.pre_analyze)
@@ -121,6 +120,7 @@ class MainWindow(QMainWindow):
         self.ui.gv_video.btn_group.ui.btn_show_trajectory.clicked.connect(self.scene.set_trajectory_visible)
         self.ui.gv_video.btn_group.ui.btn_show_frame_index.clicked.connect(self.scene.set_frame_label_visible)
         self.ui.gv_video.btn_group.ui.btn_show_result.clicked.connect(self.show_result)
+        self.result_dialog.sig_closed.connect(lambda: self.ui.gv_video.btn_group.ui.btn_show_result.setChecked(False))
         self.ui.le_filter.textChanged.connect(self.scene.set_filter)
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
