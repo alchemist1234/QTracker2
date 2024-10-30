@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
         self.scene.sig_export_frame.connect(self.update_export_progress)
-        self.scene.sig_export_finish.connect(lambda: self.waiting_dialog.close())
+        self.scene.sig_export_finish.connect(self.export_finished)
         self.scene.sig_frame_changed.connect(self.update_lcd_value)
         self.scene.sig_frame_changed.connect(self.update_slider_value)
         self.scene.sig_calculate_particle.connect(self.update_analyzing_progress)
@@ -264,12 +264,30 @@ class MainWindow(QMainWindow):
         file_path = os.path.join(file_dir, file_name)
         if len(file_path) > 0:
             self.waiting_dialog = QProgressDialog(self)
+            self.waiting_dialog.setAutoClose(False)
             self.waiting_dialog.setWindowTitle('请稍候')
             self.waiting_dialog.setLabelText('正在导出...')
             self.waiting_dialog.setMinimumDuration(100)
             self.waiting_dialog.setWindowModality(Qt.WindowModality.WindowModal)
+            # 修改进度条样式
+            self.waiting_dialog.setStyleSheet(u'QProgressBar{text-align: center;border: 1px;background: rgba(0,0,0,0)} QProgressBar::chunk{background: #22cc4a}')
+            # 进度条满了之后不重置
+            self.waiting_dialog.setAutoReset(False)
+            # 禁用取消按钮
+            btn = QPushButton('关闭')
+            btn.setEnabled(False)
+            self.waiting_dialog.setCancelButton(btn)
+            # 禁用关闭按钮
+            self.waiting_dialog.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
             self.waiting_dialog.show()
             self.scene.export(file_path, self.video_meta.fps)
+
+    def export_finished(self) -> None:
+        """
+        视频导出完成
+        """
+        self.waiting_dialog.setLabelText('导出完成')
+        self.waiting_dialog.setCancelButton(QPushButton('关闭'))
 
     @Slot(bool)
     def show_result(self, show: bool) -> None:
