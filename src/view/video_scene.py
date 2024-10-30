@@ -335,10 +335,16 @@ class VideoScene(QGraphicsScene):
         if self.mode == OperationMode.CROP:
             # 裁切模式下左键拖拽，绘制裁切框
             if event.buttons() == Qt.MouseButton.LeftButton:
-                left = min(self.mouse_press_pos.x(), event.scenePos().x())
+                # 因导出的时候为避免将裁切边框显示出来，将裁切范围左、上位置缩小了1像素，所以在绘制边框时扩大1像素
+                left = min(self.mouse_press_pos.x(), event.scenePos().x()) - 1
                 right = max(self.mouse_press_pos.x(), event.scenePos().x())
-                top = min(self.mouse_press_pos.y(), event.scenePos().y())
+                top = min(self.mouse_press_pos.y(), event.scenePos().y()) - 1
                 bottom = max(self.mouse_press_pos.y(), event.scenePos().y())
+                # 避免边框超出图片边界
+                top = max(-1.0, top)
+                left = max(-1.0, left)
+                right = min(self.current_frame_item.pixmap().width() * 1.0, right)
+                bottom = min(self.current_frame_item.pixmap().height() * 1.0, bottom)
                 self.crop_item.setRect(QRectF(left, top, right - left, bottom - top))
         else:
             super(VideoScene, self).mouseMoveEvent(event)
@@ -361,8 +367,6 @@ class VideoScene(QGraphicsScene):
     def export(self, file_path: str, fps: int) -> None:
         """
         视频导出，支持裁切
-        TODO 优化宽度高度获取
-        TODO 区域的选择，裁切边框去除
         TODO 异常处理
         :param file_path: 导出文件位置
         :param fps: 帧率
@@ -371,17 +375,15 @@ class VideoScene(QGraphicsScene):
         self.sig_export_start.emit(indexes[-1])
         file_name, file_ext = os.path.splitext(file_path)
 
+        # 获取图像高、宽，以及需要保存的区域
         if self.crop_item.rect().width() > 0 and self.crop_item.rect().height() > 0:
             img_width = int(self.crop_item.rect().width())
             img_height = int(self.crop_item.rect().height())
-            source = self.crop_item.rect()
+            rect = self.crop_item.rect()
+            source = QRectF(rect.x() + 1, rect.y() + 1, img_width - 1, img_height - 1)
         else:
-            base64 = self.frames_base64[1]
-            byte_arr = QByteArray(base64)
-            img = QImage()
-            img.loadFromData(QByteArray.fromBase64(byte_arr))
-            img_width = img.width()
-            img_height = img.height()
+            img_width = self.current_frame_item.pixmap().width()
+            img_height = self.current_frame_item.pixmap().height()
             source = QRectF(0, 0, img_width, img_height)
 
         writer = cv2.VideoWriter()
@@ -390,6 +392,7 @@ class VideoScene(QGraphicsScene):
 
         painter = QPainter()
 
+        # 逐帧导出
         for frame in indexes:
             self.change_display(frame)
             img = QImage(img_width, img_height, QImage.Format.Format_ARGB32)
