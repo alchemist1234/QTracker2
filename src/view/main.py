@@ -10,10 +10,11 @@ from src.settings.default_settings import SettingKey
 from src.view.setting import SettingDialog
 from src.view.analyze_result import ResultDialog
 from src.view.about import AboutDialog
+from src.view.status_bar import StatusBar
 from src.view.video_scene import VideoScene
 from src.worker import VideoLoader, Analyzer
 from src.ui.main_ui import Ui_main_window
-from src.model.models import VideoMetaInfo, OperationMode
+from src.model.models import VideoMetaInfo, OperationMode, WorkingState
 
 
 class MainWindow(QMainWindow):
@@ -21,12 +22,17 @@ class MainWindow(QMainWindow):
     sig_update_path = Signal(str)
     sig_start_load = Signal(str)
     sig_start_analyze = Signal()
+    sig_progress_update = Signal(WorkingState, int, int)
 
     def __init__(self, settings: Settings):
         super().__init__()
         self.settings = settings
         self.ui = Ui_main_window()
         self.ui.setupUi(self)
+        # 状态栏
+        self.status_bar = StatusBar()
+        self.setup_status_bar()
+
         self.icon_play = QIcon(':/icon/play')
         self.icon_pause = QIcon(':/icon/pause')
         # 从设置文件获取窗口大小
@@ -67,9 +73,11 @@ class MainWindow(QMainWindow):
         self.video_meta = VideoMetaInfo()
 
         # 开启线程
-        # TODO 是否可以在需要时开启和关闭
         self.video_loader_thread.start()
         self.analyzer_thread.start()
+
+    def setup_status_bar(self):
+        self.setStatusBar(self.status_bar)
 
     def setup_connects(self) -> None:
         """
@@ -89,6 +97,8 @@ class MainWindow(QMainWindow):
         self.ui.t_act_analyze.triggered.connect(lambda: self.pre_analyze(self.file_path))
         self.ui.t_act_compute.triggered.connect(self.analyze_result)
         self.ui.t_act_export.triggered.connect(self.export_video)
+        # 状态栏
+        self.sig_progress_update.connect(self.status_bar.update_progress)
         # 设置
         self.setting_dialog.sig_display_settings_changed.connect(self.scene.refresh_items)
         # 视频加载/分析
@@ -100,11 +110,13 @@ class MainWindow(QMainWindow):
         self.video_loader.sig_meta_info_updated.connect(self.video_meta_updated)
         self.video_loader.sig_frame_finished.connect(self.scene.add_frame)
         self.video_loader.sig_frame_finished.connect(self.analyze_data)
+        self.video_loader.sig_frame_finished.connect(self.update_loading_progress)
         self.video_loader.sig_first_frame_finished.connect(self.scene.change_display)
         self.video_loader.sig_all_frame_finished.connect(self.all_analyze_data_send)
         self.ui.sl_frame.valueChanged.connect(self.scene.change_display)
         self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
         self.analyzer.sig_frame_analyzed.connect(self.scene.add_frame_particles)
+        self.analyzer.sig_frame_analyzed.connect(self.update_analyzing_progress)
         self.analyzer_thread.started.connect(self.analyzer.run)
         self.ui.btn_play.clicked.connect(self.play_video)
         self.play_timer.timeout.connect(self.scene.change_to_next_frame)
@@ -124,9 +136,11 @@ class MainWindow(QMainWindow):
         self.ui.le_filter.textChanged.connect(self.scene.set_filter)
         self.scene.sig_export_start.connect(lambda total: self.waiting_dialog.setRange(0, total))
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
+        self.scene.sig_export_frame.connect(self.update_export_progress)
         self.scene.sig_export_finish.connect(lambda: self.waiting_dialog.close())
         self.scene.sig_frame_changed.connect(self.update_lcd_value)
         self.scene.sig_frame_changed.connect(self.update_slider_value)
+        self.scene.sig_calculate_particle.connect(self.update_analyzing_progress)
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):
@@ -294,6 +308,35 @@ class MainWindow(QMainWindow):
         """
         self.about_dialog = AboutDialog()
         self.about_dialog.show()
+
+    def update_loading_progress(self, frame: int) -> None:
+        """
+        更新加载视频时状态栏进度
+        :param frame: 当前帧
+        """
+        self.sig_progress_update.emit(WorkingState.LOAD, frame, self.video_meta.frame_count)
+
+    def update_analyzing_progress(self, frame: int) -> None:
+        """
+        更新分析视频时状态栏进度
+        :param frame: 当前帧
+        """
+        self.sig_progress_update.emit(WorkingState.ANALYZE, frame, self.video_meta.frame_count)
+
+    def update_calculate_progress(self, current: int, total: int) -> None:
+        """
+        更新计算粒子数据时状态栏进度
+        :param current: 当前已计算完粒子数
+        :param total: 总粒子数
+        """
+        self.sig_progress_update.emit(WorkingState.CALCULATE, current, total)
+
+    def update_export_progress(self, frame: int) -> None:
+        """
+        更新导出视频时状态栏进度
+        :param frame: 当前帧
+        """
+        self.sig_progress_update.emit(WorkingState.EXPORT, frame, self.video_meta.frame_count)
 
     def closeEvent(self, event) -> None:
         """

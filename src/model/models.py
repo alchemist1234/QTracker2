@@ -19,6 +19,13 @@ class OperationMode(Enum):
     ADD = 2
 
 
+class WorkingState(Enum):
+    LOAD = 0, '加载'
+    ANALYZE = 1, '分析'
+    CALCULATE = 2, '计算'
+    EXPORT = 3, '导出'
+
+
 @dataclass
 class VideoMetaInfo:
     """
@@ -92,13 +99,15 @@ class AnalyzeResult:
             return None
 
 
-class ParticlePositions(object):
+class ParticlePositions(QObject):
     """
     用于记录一个视频每一帧的粒子位置
     """
+    sig_calculate_particle = Signal(int, int)
 
     def __init__(self):
         # {粒子ID : {帧ID : (x, y)}}
+        super().__init__()
         self.particles: Dict[int, Dict[int, Tuple[int, int]]] = {}
 
     def analyze_particle_data(self, fps: float, scale: float,
@@ -117,8 +126,11 @@ class ParticlePositions(object):
             if len(particle_ids) != 0:
                 ids = particle_ids
         res = {}
+        i = 0
         for particle_id in ids:
             res[particle_id] = self.__analyze_particle_data(fps, scale, particle_id)
+            # 分析完一个粒子后将信号发出，以更新状态栏
+            self.sig_calculate_particle.emit(i, len(ids))
         return res
 
     def __analyze_particle_data(self, fps: float, scale: float,
@@ -322,7 +334,7 @@ class AnalyzeResultModel(QAbstractTableModel):
 
 
 class DataHelper(QObject):
-    sig_result_finished = Signal()
+    sig_calculate_particle = Signal(int, int)
 
     def __init__(self, settings: Settings):
         """
@@ -343,6 +355,8 @@ class DataHelper(QObject):
         # {粒子ID: List[AnalyzeResult], ...}
         # 分析结果
         self.analyze_result: Dict[int, List[AnalyzeResult]] = {}
+        # 粒子数据计算完后更新状态栏信息
+        self.particle_positions.sig_calculate_particle.connect(self.__calculate_particle)
 
     def add_particle(self, frame_index: int, particle_id: int, pos: Tuple[int, int]) -> None:
         """
@@ -524,6 +538,14 @@ class DataHelper(QObject):
         :param scale: 视频比例尺
         """
         self.analyze_result = self.particle_positions.analyze_particle_data(fps, scale)
+
+    def __calculate_particle(self, current: int, total: int) -> None:
+        """
+        粒子数据计算完后中转信号
+        :param current: 已计算完粒子数
+        :param total: 总粒子数
+        """
+        self.sig_calculate_particle.emit(current, total)
 
     def get_analyze_result_model(self, particle_id: int) -> AnalyzeResultModel:
         """

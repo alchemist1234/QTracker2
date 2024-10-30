@@ -20,6 +20,7 @@ class VideoScene(QGraphicsScene):
     sig_export_frame = Signal(int)
     sig_export_finish = Signal()
     sig_frame_changed = Signal(int)
+    sig_calculate_particle = Signal(int, int)
 
     codes_map = {
         '.avi': 'XVID',
@@ -58,6 +59,8 @@ class VideoScene(QGraphicsScene):
         # 裁切框
         self.crop_item: QGraphicsRectItem = self.create_crop_item()
         self.addItem(self.crop_item)
+        # 粒子计算完后发出信号，更新状态栏
+        self.data_helper.sig_calculate_particle.connect(self.__calculate_particle)
 
     @staticmethod
     def create_crop_item() -> QGraphicsRectItem:
@@ -268,6 +271,14 @@ class VideoScene(QGraphicsScene):
         :param mode: OperationMode
         """
         self.mode = mode
+
+    def __calculate_particle(self, current: int, total: int) -> None:
+        """
+        中转粒子计算完信号
+        :param current: 已计算完粒子数
+        :param total: 总粒子数
+        """
+        self.sig_calculate_particle.emit(current, total)
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """

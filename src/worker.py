@@ -87,7 +87,6 @@ class Analyzer(QObject):
         self.running = True
         # 循环分析视频帧
         while True:
-            print('still running')
             if not self.working:
                 # 停止任务时结束循环
                 break
@@ -168,18 +167,22 @@ class Analyzer(QObject):
             ordered_centers = np.append(ordered_centers, new_row, axis=0)
 
         memory_frames = self.settings.int_value(SettingKey.memory_frames)
-        for center in ordered_centers:
-            center_tuple = tuple(np.ravel(center).astype(int))
-            for index, history_center in self.history_particles.items():
-                if frame_index - history_center.frame_index <= memory_frames and \
-                        self.same_particle(history_center.center, center_tuple):
-                    self.history_particles[index] = HistoryParticle(frame_index=frame_index, center=center_tuple)
-                    frame_particles[index] = center_tuple
-                    break
-            else:
-                frame_particles[self.max_label] = center_tuple
-                self.history_particles[self.max_label] = HistoryParticle(frame_index, center_tuple)
-                self.max_label += 1
+        try:
+            for center in ordered_centers:
+                center_tuple = tuple(np.ravel(center).astype(int))
+                for index, history_center in self.history_particles.items():
+                    if frame_index - history_center.frame_index <= memory_frames and \
+                            self.same_particle(history_center.center, center_tuple):
+                        self.history_particles[index] = HistoryParticle(frame_index=frame_index, center=center_tuple)
+                        frame_particles[index] = center_tuple
+                        break
+                else:
+                    frame_particles[self.max_label] = center_tuple
+                    self.history_particles[self.max_label] = HistoryParticle(frame_index, center_tuple)
+                    self.max_label += 1
+        except Exception as e:
+            # 防止分析过程中重新加载视频，self.history_particles被清空，遍历时报错导致线程退出后无法再次分析
+            pass
         print(f'frame analyzed: {frame_index}, particles: {len(frame_particles)}')
         return frame_particles
 
