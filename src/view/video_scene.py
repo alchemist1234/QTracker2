@@ -9,7 +9,8 @@ from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSce
 from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants, QPainter
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
-from src.model.models import DataHelper, OperationMode
+from src.model.models import DataHelper
+from src.model.enums import OperationMode
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.util.common_util import split_indexes_text
@@ -124,18 +125,21 @@ class VideoScene(QGraphicsScene):
         切换图像显示
         :param frame_index: 帧ID
         """
+        width, height = 0, 0
         if frame_index in self.frames_base64:
             base64 = self.frames_base64[frame_index]
             byte_arr = QByteArray(base64)
             img = QImage()
             img.loadFromData(QByteArray.fromBase64(byte_arr))
-            self.current_frame_item.setPixmap(QPixmap.fromImage(img))
+            pixmap = QPixmap.fromImage(img)
+            width, height = pixmap.width(), pixmap.height()
+            self.current_frame_item.setPixmap(pixmap)
         # 帧号
         if self.frame_label_item:
             self.removeItem(self.frame_label_item)
         self.frame_label_item = self.data_helper.get_frame_label_item(frame_index)
         if self.frame_label_item:
-            self.frame_label_item.refresh()
+            self.frame_label_item.refresh(width, height)
             self.addItem(self.frame_label_item)
 
     def __change_particle_display(self, frame_index: int) -> None:

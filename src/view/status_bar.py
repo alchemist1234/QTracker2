@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QStatusBar, QProgressBar, QLabel
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QTimer, Slot
 
-from src.model.models import WorkingState
+from src.model.enums import WorkingState
 
 
 class StatusBar(QStatusBar):

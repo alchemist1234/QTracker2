@@ -974,14 +974,35 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_18">
             <item>
-             <widget class="QLabel" name="lb_frame_label_font">
+             <widget class="QLabel" name="lb_frame_label_pos">
               <property name="text">
-               <string>帧号字体</string>
+               <string>帧号位置</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QFontComboBox" name="fcb_frame_label_font"/>
+             <widget class="QComboBox" name="cb_frame_label_pos">
+              <item>
+               <property name="text">
+                <string>左上</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>左下</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>右上</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>右下</string>
+               </property>
+              </item>
+             </widget>
             </item>
             <item>
              <spacer name="horizontalSpacer_10">
@@ -995,6 +1016,16 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="lb_frame_label_font">
+              <property name="text">
+               <string>帧号字体</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFontComboBox" name="fcb_frame_label_font"/>
             </item>
            </layout>
           </item>

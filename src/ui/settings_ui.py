@@ -15,10 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QDoubleSpinBox,
-    QFontComboBox, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QPushButton, QSizePolicy, QSpacerItem,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
+    QDoubleSpinBox, QFontComboBox, QGroupBox, QHBoxLayout,
+    QLabel, QLayout, QPushButton, QSizePolicy,
+    QSpacerItem, QSpinBox, QTabWidget, QVBoxLayout,
+    QWidget)
 
 from src.view.custom_widget import ColorLabel
 
@@ -616,6 +617,24 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_18 = QHBoxLayout()
         self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
+        self.lb_frame_label_pos = QLabel(self.groupBox_9)
+        self.lb_frame_label_pos.setObjectName(u"lb_frame_label_pos")
+
+        self.horizontalLayout_18.addWidget(self.lb_frame_label_pos)
+
+        self.cb_frame_label_pos = QComboBox(self.groupBox_9)
+        self.cb_frame_label_pos.addItem("")
+        self.cb_frame_label_pos.addItem("")
+        self.cb_frame_label_pos.addItem("")
+        self.cb_frame_label_pos.addItem("")
+        self.cb_frame_label_pos.setObjectName(u"cb_frame_label_pos")
+
+        self.horizontalLayout_18.addWidget(self.cb_frame_label_pos)
+
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_18.addItem(self.horizontalSpacer_10)
+
         self.lb_frame_label_font = QLabel(self.groupBox_9)
         self.lb_frame_label_font.setObjectName(u"lb_frame_label_font")
 
@@ -625,10 +644,6 @@ class Ui_Dialog(object):
         self.fcb_frame_label_font.setObjectName(u"fcb_frame_label_font")
 
         self.horizontalLayout_18.addWidget(self.fcb_frame_label_font)
-
-        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_18.addItem(self.horizontalSpacer_10)
 
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_18)
@@ -726,6 +741,12 @@ class Ui_Dialog(object):
         self.lb_frame_label.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u989c\u8272", None))
         self.lb_frame_label_display.setText("")
         self.lb_frame_label_size.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u5927\u5c0f", None))
+        self.lb_frame_label_pos.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u4f4d\u7f6e", None))
+        self.cb_frame_label_pos.setItemText(0, QCoreApplication.translate("Dialog", u"\u5de6\u4e0a", None))
+        self.cb_frame_label_pos.setItemText(1, QCoreApplication.translate("Dialog", u"\u5de6\u4e0b", None))
+        self.cb_frame_label_pos.setItemText(2, QCoreApplication.translate("Dialog", u"\u53f3\u4e0a", None))
+        self.cb_frame_label_pos.setItemText(3, QCoreApplication.translate("Dialog", u"\u53f3\u4e0b", None))
+
         self.lb_frame_label_font.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u5b57\u4f53", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_display), QCoreApplication.translate("Dialog", u"\u663e\u793a", None))
         self.btn_load_settings.setText(QCoreApplication.translate("Dialog", u"\u5bfc\u5165\u914d\u7f6e", None))

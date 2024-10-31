@@ -14,7 +14,8 @@ from src.view.status_bar import StatusBar
 from src.view.video_scene import VideoScene
 from src.worker import VideoLoader, Analyzer
 from src.ui.main_ui import Ui_main_window
-from src.model.models import VideoMetaInfo, OperationMode, WorkingState
+from src.model.models import VideoMetaInfo
+from src.model.enums import OperationMode, WorkingState
 
 
 class MainWindow(QMainWindow):

@@ -6,6 +6,7 @@ from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont,
 from PySide6.QtWidgets import (QLabel, QWidget, QHBoxLayout, QListView, QSizePolicy, QSpacerItem, QGraphicsEllipseItem,
                                QGraphicsItem, QGraphicsLineItem, QGraphicsSimpleTextItem, QGraphicsItemGroup)
 
+from src.model.enums import FrameLabelPos
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.ui.view_btn_grp_ui import Ui_wid_button_group
@@ -246,6 +247,7 @@ class MarkItem(QGraphicsSimpleTextItem):
         show_mark = self.settings.boolean_value(SettingKey.show_mark)
         self.setVisible(show_mark)
 
+
 class ParticleGroup(QGraphicsItemGroup):
     def __init__(self, settings: Settings, index: int, x, y):
         """
@@ -321,8 +323,9 @@ class TrajectoryItem(QGraphicsLineItem):
         show_trajectory = self.settings.boolean_value(SettingKey.show_trajectory)
         self.setVisible(show_trajectory)
 
+
 class FrameLabelItem(QGraphicsSimpleTextItem):
-    def __init__(self, settings: Settings, index: int, x = 0, y = 0):
+    def __init__(self, settings: Settings, index: int, x=0, y=0):
         """
         轨迹Item（一段）
         :param settings: 配置信息
@@ -340,9 +343,11 @@ class FrameLabelItem(QGraphicsSimpleTextItem):
         self.setBrush(brush)
         self.refresh()
 
-    def refresh(self):
+    def refresh(self, width: int = None, height: int = None):
         """
         刷新显示
+        :param width 图片宽度, 用于计算帧标签在图片右侧时的位置
+        :param height 图片高度, 用于计算帧标签在图片下方时的位置
         """
         # 字体
         font = QFont(self.settings.value(SettingKey.frame_label_font))
@@ -358,3 +363,20 @@ class FrameLabelItem(QGraphicsSimpleTextItem):
         # 显示/隐藏
         show_frame_label = self.settings.boolean_value(SettingKey.show_frame_label)
         self.setVisible(show_frame_label)
+        pos = self.settings.int_value(SettingKey.frame_label_pos)
+        if not width:
+            # 没有传入图片宽、高时，默认在左上角
+            return
+        # 设置标签位置
+        if pos == FrameLabelPos.LEFT_TOP.value:
+            self.setX(0)
+            self.setY(0)
+        elif pos == FrameLabelPos.LEFT_BOTTOM.value:
+            self.setX(0)
+            self.setY(height - self.boundingRect().height())
+        elif pos == FrameLabelPos.RIGHT_TOP.value:
+            self.setX(width - self.boundingRect().width())
+            self.setY(0)
+        else:
+            self.setX(width - self.boundingRect().width())
+            self.setY(height - self.boundingRect().height())

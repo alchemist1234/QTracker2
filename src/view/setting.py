@@ -148,6 +148,7 @@ class SettingDialog(QDialog):
         self.ui.lb_frame_label_display.set_color(source_settings.value(SettingKey.frame_label_color))
         self.ui.spb_frame_label_size.setValue(source_settings.int_value(SettingKey.frame_label_size))
         self.ui.fcb_frame_label_font.setCurrentFont(source_settings.value(SettingKey.frame_label_font))
+        self.ui.cb_frame_label_pos.setCurrentIndex(source_settings.int_value(SettingKey.frame_label_pos))
 
     def save_settings(self, settings: Settings = None) -> None:
         """
@@ -170,7 +171,8 @@ class SettingDialog(QDialog):
                 SettingKey.same_trajectory_color_with_particle) != self.ui.chb_same_trajectory_color_with_particle.isChecked() \
                     or self.settings.value(SettingKey.frame_label_color) != self.ui.lb_frame_label_display.colors \
                     or self.settings.int_value(SettingKey.frame_label_size) != self.ui.spb_frame_label_size.value() \
-                    or self.settings.value(SettingKey.frame_label_font) != self.ui.fcb_frame_label_font.currentFont():
+                    or self.settings.value(SettingKey.frame_label_font) != self.ui.fcb_frame_label_font.currentFont() \
+                    or self.settings.value(SettingKey.frame_label_pos) != self.ui.cb_frame_label_pos.currentIndex():
                 display_updated = True
 
         target_settings = settings if settings else self.settings
@@ -213,6 +215,7 @@ class SettingDialog(QDialog):
         target_settings.set_value(SettingKey.frame_label_color, self.ui.lb_frame_label_display.colors)
         target_settings.set_value(SettingKey.frame_label_size, self.ui.spb_frame_label_size.value())
         target_settings.set_value(SettingKey.frame_label_font, self.ui.fcb_frame_label_font.currentFont())
+        target_settings.set_value(SettingKey.frame_label_pos, self.ui.cb_frame_label_pos.currentIndex())
 
         # 显示设置变动，通知更新页面显示
         if display_updated:

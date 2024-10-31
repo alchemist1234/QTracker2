@@ -66,5 +66,6 @@ class SettingKey(Enum):
     frame_label_color = SettingItem(section='display', key='frame_label_color', default_value=QColor(0, 0, 255))
     frame_label_size = SettingItem(section='display', key='frame_label_size', default_value=18)
     frame_label_font = SettingItem(section='display', key='frame_label_font', default_value=QFont('SimHei'))
+    frame_label_pos = SettingItem(section='display', key='frame_label_pos', default_value=0)
     show_frame_label = SettingItem(section='display', key='show_frame_label', default_value=True, save_to_file=False)
     index_filter = SettingItem(section='display', key='index_filter', default_value=[], save_to_file=False)
