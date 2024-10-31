@@ -88,14 +88,14 @@ class MainWindow(QMainWindow):
         self.ui.m_act_open.triggered.connect(self.open_file)
         self.ui.m_act_setting.triggered.connect(self.open_settings)
         self.ui.m_act_export.triggered.connect(self.export_video)
-        self.ui.m_act_analyze.triggered.connect(lambda: self.pre_analyze(self.file_path))
+        self.ui.m_act_analyze.triggered.connect(lambda: self.analyze_triggered(self.file_path))
         self.ui.m_act_compute.triggered.connect(self.analyze_result)
         self.ui.m_act_exit.triggered.connect(self.close)
         self.ui.m_act_about.triggered.connect(self.open_about)
         # 工具栏按钮点击
         self.ui.t_act_open.triggered.connect(self.open_file)
         self.ui.t_act_setting.triggered.connect(self.open_settings)
-        self.ui.t_act_analyze.triggered.connect(lambda: self.pre_analyze(self.file_path))
+        self.ui.t_act_analyze.triggered.connect(lambda: self.analyze_triggered(self.file_path))
         self.ui.t_act_compute.triggered.connect(self.analyze_result)
         self.ui.t_act_export.triggered.connect(self.export_video)
         # 状态栏
@@ -164,6 +164,10 @@ class MainWindow(QMainWindow):
         """
         打开文件
         """
+        if self.file_path:
+            if not self.confirm('该操作会清除所有数据, 是否继续'):
+                return
+
         path, _ = QFileDialog.getOpenFileName(self, caption='Open File',
                                               filter='Video Files(*.mp4 *.avi *.mkv *.flv);;All File(*.*)')
         if path:
@@ -171,6 +175,11 @@ class MainWindow(QMainWindow):
             self.file_path = path
             self.sig_update_path.emit(path)
             self.sig_pre_analyze.emit(path)
+
+    def analyze_triggered(self, path: str):
+        if path:
+            if self.confirm('该操作会清除所有粒子数据, 是否继续'):
+                self.pre_analyze(path)
 
     @Slot(str)
     def pre_analyze(self, path: str) -> None:
@@ -185,6 +194,19 @@ class MainWindow(QMainWindow):
             self.scene.clear_data()
             self.sig_start_analyze.emit()
             self.sig_start_load.emit(path)
+
+    def confirm(self, text: str) -> bool:
+        """
+        弹出确认窗口, 并返回是否点击了确认按钮
+        :param text: 窗口提示
+        :return: 是否确认
+        """
+        msg_box = QMessageBox(QMessageBox.Icon.Warning, '警告', text,
+                              QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel, self)
+        msg_box.setButtonText(QMessageBox.StandardButton.Ok, '确定')
+        msg_box.setButtonText(QMessageBox.StandardButton.Cancel, '取消')
+        ret = msg_box.exec()
+        return ret == QMessageBox.StandardButton.Ok
 
     def open_settings(self) -> None:
         """
@@ -271,7 +293,8 @@ class MainWindow(QMainWindow):
             self.waiting_dialog.setMinimumDuration(100)
             self.waiting_dialog.setWindowModality(Qt.WindowModality.WindowModal)
             # 修改进度条样式
-            self.waiting_dialog.setStyleSheet(u'QProgressBar{text-align: center;border: 1px;background: rgba(0,0,0,0)} QProgressBar::chunk{background: #22cc4a}')
+            self.waiting_dialog.setStyleSheet(
+                u'QProgressBar{text-align: center;border: 1px;background: rgba(0,0,0,0)} QProgressBar::chunk{background: #22cc4a}')
             # 进度条满了之后不重置
             self.waiting_dialog.setAutoReset(False)
             # 禁用取消按钮
@@ -303,6 +326,9 @@ class MainWindow(QMainWindow):
         """
         分析粒子动动结果
         """
+        if self.file_path:
+            if not self.confirm('该操作会清除所有计算数据, 是否继续'):
+                return
         fps = self.settings.int_value(SettingKey.fps)
         scale = self.settings.float_value(SettingKey.scale)
         if fps <= 0:
