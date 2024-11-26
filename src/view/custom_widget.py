@@ -283,7 +283,7 @@ class ParticleGroup(QGraphicsItemGroup):
 
 
 class TrajectoryItem(QGraphicsLineItem):
-    def __init__(self, settings: Settings, index: int, x1, y1, x2, y2):
+    def __init__(self, settings: Settings, index: int, x1, y1, x2, y2, frame_interval):
         """
         轨迹Item（一段）
         :param settings: 配置信息
@@ -292,11 +292,13 @@ class TrajectoryItem(QGraphicsLineItem):
         :param y1: 起点y坐标
         :param x2: 终点x坐标
         :param y2: 终点y坐标
+        :param frame_interval: 帧间隔
         """
         super().__init__(x1, y1, x2, y2)
         self.settings = settings
         self.index = index
         self.distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        self.speed = self.distance / frame_interval
         pen = QPen()
         pen.setStyle(Qt.PenStyle.SolidLine)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)

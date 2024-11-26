@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Tuple, Any, Dict, List, Collection, Optional, Union
-from enum import Enum
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QObject, Signal
 
@@ -265,17 +264,17 @@ class ParticlePositions(QObject):
                 if len(frame_pos_dict) > 0}
 
     def get_particles_before_frame(self, frame_index: int, particle_ids: Collection[int] = None) \
-            -> Dict[int, List[Tuple[int, int]]]:
+            -> Dict[int, List[Tuple[int, int, int]]]:
         """
         获取一帧之前（含当前帧）所有粒子有序点位，用于计算粒子轨迹
         :param frame_index: 帧ID
         :param particle_ids: 需要过滤的粒子ID, 默认不过滤
-        :return: 粒子历史位置 {粒子ID: [(x1, y1), (x2, y2), ...]}
+        :return: 粒子历史位置 {粒子ID: [{frame: (x1, y1)} , {frame: (x2, y2)}, ...]}
         """
         if not particle_ids:
             particle_ids = set()
-        return {particle_id: [frame_pos_dict[frame] for frame in sorted(frame_pos_dict.keys())
-                              if frame <= frame_index]
+        return {particle_id: [(frame_pos_dict[frame][0], frame_pos_dict[frame][1], frame)
+                              for frame in sorted(frame_pos_dict.keys()) if frame <= frame_index]
                 for particle_id, frame_pos_dict in self.particles.items()
                 if frame_index in frame_pos_dict and len(frame_pos_dict[frame_index]) > 0
                 and (particle_id in particle_ids or not particle_ids)}
@@ -477,7 +476,7 @@ class DataHelper(QObject):
             start_pos = pos_list[-2]
             end_pos = pos_list[-1]
             frame_trajectory_items[particle_id] = TrajectoryItem(self.settings, particle_id, start_pos[0], start_pos[1],
-                                                                 end_pos[0], end_pos[1])
+                                                                 end_pos[0], end_pos[1], end_pos[2] - start_pos[2])
         self.trajectory_items[frame_index] = frame_trajectory_items
 
     def get_particle_items(self, frame_index: int) -> List[ParticleGroup]:
