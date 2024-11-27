@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>485</width>
-    <height>512</height>
+    <height>498</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -932,6 +932,103 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QCheckBox" name="chb_color_with_speed">
+              <property name="text">
+               <string>颜色随速度变化</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_19">
+            <item>
+             <widget class="QLabel" name="lb_speed_color">
+              <property name="text">
+               <string>速度颜色</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="GradientLabel" name="lb_speed_color_display">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_20">
+            <item>
+             <widget class="QLabel" name="lb_color_speed_min">
+              <property name="text">
+               <string>最小速度(px/s)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_color_speed_min">
+              <property name="palette">
+               <palette>
+                <active/>
+                <inactive/>
+                <disabled>
+                 <colorrole role="Text">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="228">
+                    <red>136</red>
+                    <green>136</green>
+                    <blue>136</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </disabled>
+               </palette>
+              </property>
+              <property name="maximum">
+               <double>999999.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lb_color_speed_max">
+              <property name="text">
+               <string>最大速度(px/s)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_color_speed_max">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777210</height>
+               </size>
+              </property>
+              <property name="palette">
+               <palette>
+                <active/>
+                <inactive/>
+                <disabled>
+                 <colorrole role="Text">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="228">
+                    <red>136</red>
+                    <green>136</green>
+                    <blue>136</blue>
+                   </color>
+                  </brush>
+                 </colorrole>
+                </disabled>
+               </palette>
+              </property>
+              <property name="maximum">
+               <double>999999.000000000000000</double>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -1097,6 +1194,11 @@
    <slots>
     <signal>clicked(QMouseEvent)</signal>
    </slots>
+  </customwidget>
+  <customwidget>
+   <class>GradientLabel</class>
+   <extends>QLabel</extends>
+   <header>src.view.custom_widget</header>
   </customwidget>
  </customwidgets>
  <resources/>

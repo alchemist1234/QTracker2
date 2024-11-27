@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSce
 from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants, QPainter
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
-from src.model.models import DataHelper
+from src.model.qt_models import DataHelper
 from src.model.enums import OperationMode
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings

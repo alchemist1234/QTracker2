@@ -1,12 +1,13 @@
 import math
 from typing import Union, List
 
-from PySide6.QtCore import Qt, Signal, QPoint, QRectF
-from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont, QPen
+from PySide6.QtCore import Qt, Signal, QPoint, QRectF, QPropertyAnimation
+from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont, QPen, QLinearGradient
 from PySide6.QtWidgets import (QLabel, QWidget, QHBoxLayout, QListView, QSizePolicy, QSpacerItem, QGraphicsEllipseItem,
                                QGraphicsItem, QGraphicsLineItem, QGraphicsSimpleTextItem, QGraphicsItemGroup)
 
 from src.model.enums import FrameLabelPos
+from src.model.models import GradientColor
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.ui.view_btn_grp_ui import Ui_wid_button_group
@@ -125,6 +126,112 @@ class ColorItem(QWidget):
         self.color = color
         self.color_name = QColor(color).name()
         self.ui.lb_color.set_color(color)
+        self.ui.lb_color_name.setText(self.color_name)
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        """
+        双击事件
+        :param event: QMouseEvent
+        """
+        self.parent().mouseDoubleClickEvent(event)
+
+
+class GradientLabel(QLabel):
+    clicked = Signal(QMouseEvent)
+    max_interpolated_duration = 1000
+
+    def __init__(self, parent=None):
+        super(GradientLabel, self).__init__(parent=parent)
+        self.brush = QBrush()
+        self.brush.setStyle(Qt.BrushStyle.LinearGradientPattern)
+        self.painter = QPainter()
+        self.interpolated = QPropertyAnimation()
+        self._colors = []
+        self.__init_interpolated()
+
+    @property
+    def colors(self) -> List[GradientColor]:
+        return self._colors
+
+    def __init_interpolated(self):
+        self.interpolated = QPropertyAnimation()
+        self.interpolated.setDuration(self.max_interpolated_duration)
+
+    def get_color_at(self, pos: float):
+        real_pos = max(pos, 0)
+        real_pos = min(real_pos, 1)
+        self.interpolated.setCurrentTime(int(real_pos * self.max_interpolated_duration))
+        return self.interpolated.currentValue()
+
+    def set_gradient(self, gradient_colors: Union[List[GradientColor], GradientColor]) -> None:
+        if not isinstance(gradient_colors, list):
+            gradient_colors = [gradient_colors]
+        self._colors = gradient_colors
+        self.interpolated = QPropertyAnimation()
+        gradient = QLinearGradient(0, 0, self.width(), 0)
+        for gradient_color in gradient_colors:
+            self.interpolated.setKeyValueAt(gradient_color.pos, gradient_color.color)
+            gradient.setColorAt(gradient_color.pos, gradient_color.color)
+        self.brush = QBrush(gradient)
+        pixmap = QPixmap(self.width(), self.height())
+        self.painter.begin(pixmap)
+        self.painter.setBrush(self.brush)
+        self.painter.drawRect(0, 0, self.width(), self.height())
+        self.painter.end()
+        self.setPixmap(pixmap)
+
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
+        self.clicked.emit(ev)
+        super(GradientLabel, self).mousePressEvent(ev)
+
+
+class Ui_GradientItem(object):
+    def __init__(self, parent: QWidget, gradient_color: GradientColor, height: int):
+        """
+        ListWidget中用来显示颜色的Item UI
+        :param parent: 父对象
+        :param gradient_color: 颜色
+        :param height: 色块高度
+        """
+        margin = 4
+        self.layout = QHBoxLayout(parent)
+        self.layout.setContentsMargins(margin, margin, margin, margin)
+        self.layout.setSpacing(margin)
+        self.lb_pos = QLabel()
+        self.lb_pos.setText(str(gradient_color.pos))
+        self.color_name = QColor(gradient_color.color).name()
+        self.lb_color = GradientLabel(parent)
+        self.lb_color.setFixedSize(64, height - 2 * margin)
+        self.lb_color.set_gradient([gradient_color])
+        self.lb_color_name = QLabel(parent)
+        self.lb_color_name.setText(self.color_name)
+        self.layout.addWidget(self.lb_pos)
+        self.layout.addWidget(self.lb_color)
+        self.layout.addWidget(self.lb_color_name)
+        self.layout.addItem(QSpacerItem(20, height, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+
+
+class GradientItem(QWidget):
+    def __init__(self, parent: QListView, gradient_color: GradientColor, height: int):
+        """
+        ListWidget中用来显示颜色的Item
+        :param parent: ListWidget父对象
+        :param gradient_color: 颜色
+        :param height: 色块高度
+        """
+        super().__init__(parent)
+        self.ui = Ui_GradientItem(self, gradient_color, height)
+        self.gradient_color = gradient_color
+        self.color_name = QColor(gradient_color.color).name()
+
+    def update_color(self, gradient_color: GradientColor) -> None:
+        """
+        更新颜色
+        :param gradient_color: 颜色
+        """
+        self.gradient_color = gradient_color
+        self.color_name = QColor(gradient_color.color).name()
+        self.ui.lb_color.set_gradient(gradient_color)
         self.ui.lb_color_name.setText(self.color_name)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import Any
 from enum import Enum
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtGui import QColor, QFont, QLinearGradient, QColorConstants
+
+from src.model.models import GradientColor
 
 
 @dataclass
@@ -16,6 +18,14 @@ class SettingItem:
     key: str
     default_value: Any
     save_to_file: bool = True
+
+
+default_speed_color = [
+    GradientColor(0, QColorConstants.Blue),
+    GradientColor(0.5, QColorConstants.Green),
+    GradientColor(1, QColorConstants.Red)
+]
+
 
 class SettingKey(Enum):
     main_width = SettingItem(section='main', key='width', default_value=800)
@@ -63,6 +73,12 @@ class SettingKey(Enum):
     show_trajectory = SettingItem(section='display', key='show_trajectory', default_value=True, save_to_file=False)
     same_trajectory_color_with_particle = SettingItem(section='display', key='same_trajectory_color_with_particle',
                                                       default_value=False)
+    trajectory_color_with_speed = SettingItem(section='display', key='trajectory_color_change_with_speed',
+                                              default_value=False)
+    trajectory_speed_color = SettingItem(section='display', key='trajectory_speed_color',
+                                         default_value=default_speed_color)
+    min_color_speed = SettingItem(section='display', key='min_color_speed', default_value=0)
+    max_color_speed = SettingItem(section='display', key='max_color_speed', default_value=100)
     frame_label_color = SettingItem(section='display', key='frame_label_color', default_value=QColor(0, 0, 255))
     frame_label_size = SettingItem(section='display', key='frame_label_size', default_value=18)
     frame_label_font = SettingItem(section='display', key='frame_label_font', default_value=QFont('SimHei'))

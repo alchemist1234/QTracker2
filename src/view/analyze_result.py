@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QDialog, QCompleter, QInputDialog, QFileDialog
 from PySide6.QtCore import Signal, Slot, Qt
 
 from src.ui.analyze_result_ui import Ui_dialog_result
-from src.model.models import AnalyzeResultModel
+from src.model.qt_models import AnalyzeResultModel
 from src.view.video_scene import VideoScene
 from src.util import common_util
 

@@ -2,13 +2,15 @@ from typing import List
 
 from PySide6.QtWidgets import QDialog, QFileDialog
 from PySide6.QtCore import Slot, Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QGradient
 
+from src.model.models import GradientColor
 from src.ui.settings_ui import Ui_Dialog
 from src.settings.settings import Settings
 from src.settings.default_settings import SettingKey
-from src.view.custom_widget import ColorLabel
+from src.view.custom_widget import ColorLabel, GradientLabel
 from src.view.color_editor import ColorEditor
+from src.view.gradient_editor import GradientEditor
 
 
 class SettingDialog(QDialog):
@@ -27,9 +29,11 @@ class SettingDialog(QDialog):
         self.ui.lb_particle_color_display.setFixedSize(76, 20)
         self.ui.lb_mark_color_display.setFixedSize(76, 20)
         self.ui.lb_trajectory_color_display.setFixedSize(76, 20)
+        self.ui.lb_speed_color_display.setFixedSize(76, 20)
         self.ui.lb_frame_label_display.setFixedSize(76, 20)
         self.load_settings()
         self.setup_connects()
+        self.init_state()
 
     def setup_connects(self) -> None:
         """
@@ -41,7 +45,9 @@ class SettingDialog(QDialog):
             lambda x: self.edit_colors(self.ui.lb_trajectory_color_display))
         self.ui.lb_frame_label_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_frame_label_display))
         self.ui.chb_same_mark_color_with_particle.checkStateChanged.connect(self.mark_color_state)
-        self.ui.chb_same_trajectory_color_with_particle.checkStateChanged.connect(self.trajectory_color_state)
+        self.ui.chb_same_trajectory_color_with_particle.clicked.connect(self.trajectory_color_with_particle_clicked)
+        self.ui.chb_color_with_speed.clicked.connect(self.speed_color_clicked)
+        self.ui.lb_speed_color_display.clicked.connect(lambda x: self.edit_gradient(self.ui.lb_speed_color_display))
         # 按钮
         self.ui.btn_ok.clicked.connect(self.accept)
         self.ui.btn_cancel.clicked.connect(self.reject)
@@ -58,12 +64,28 @@ class SettingDialog(QDialog):
         self.ui.lb_mark_color_display.setEnabled(state != Qt.CheckState.Checked)
 
     @Slot(Qt.CheckState)
-    def trajectory_color_state(self, state: Qt.CheckState) -> None:
+    def trajectory_color_with_particle_clicked(self, checked: bool) -> None:
         """
         启用/禁用TrajectoryColor
-        :param state: 与粒子相同颜色复选框状态
+        :param checked: 与粒子相同颜色复选框状态
         """
-        self.ui.lb_trajectory_color_display.setEnabled(state != Qt.CheckState.Checked)
+        self.ui.lb_trajectory_color_display.setEnabled(not checked)
+        self.ui.chb_color_with_speed.setChecked(False)
+        self.ui.lb_speed_color_display.setEnabled(False)
+        self.ui.dsb_color_speed_min.setEnabled(False)
+        self.ui.dsb_color_speed_max.setEnabled(False)
+
+    @Slot(Qt.CheckState)
+    def speed_color_clicked(self, checked: bool) -> None:
+        """
+        启用/禁用轨迹颜色随速度变化
+        :param checked: 轨迹颜色随速度变化复选框状态
+        """
+        self.ui.lb_trajectory_color_display.setEnabled(not checked)
+        self.ui.chb_same_trajectory_color_with_particle.setChecked(False)
+        self.ui.lb_speed_color_display.setEnabled(checked)
+        self.ui.dsb_color_speed_min.setEnabled(checked)
+        self.ui.dsb_color_speed_max.setEnabled(checked)
 
     @Slot(ColorLabel)
     def edit_colors(self, label: ColorLabel) -> None:
@@ -84,6 +106,31 @@ class SettingDialog(QDialog):
         :param colors: 颜色
         """
         label.set_color(colors)
+
+    @Slot(GradientLabel)
+    def edit_gradient(self, label: GradientLabel):
+        editor = GradientEditor(self, label)
+        editor.add_colors(label.colors)
+        editor.sig_gradient_changed.connect(self.update_gradient)
+        editor.exec()
+
+    @Slot(GradientLabel, list)
+    def update_gradient(self, label: GradientLabel, gradients: List[GradientColor]) -> None:
+        label.set_gradient(gradients)
+
+    def init_state(self) -> None:
+        """
+        初始化控状态
+        """
+        self.mark_color_state(self.ui.chb_same_mark_color_with_particle.checkState())
+        same_traject_color_with_particle = self.ui.chb_same_trajectory_color_with_particle.isChecked()
+        speed_color = self.ui.chb_color_with_speed.isChecked()
+        if same_traject_color_with_particle:
+            self.trajectory_color_with_particle_clicked(True)
+        elif speed_color:
+            self.speed_color_clicked(True)
+        else:
+            self.trajectory_color_with_particle_clicked(False)
 
     def load_settings_from_file(self) -> None:
         """
@@ -145,6 +192,10 @@ class SettingDialog(QDialog):
         self.ui.spb_trajectory_width.setValue(source_settings.int_value(SettingKey.trajectory_width))
         self.ui.chb_same_trajectory_color_with_particle.setChecked(
             source_settings.boolean_value(SettingKey.same_trajectory_color_with_particle))
+        self.ui.chb_color_with_speed.setChecked(source_settings.boolean_value(SettingKey.trajectory_color_with_speed))
+        self.ui.lb_speed_color_display.set_gradient(source_settings.value(SettingKey.trajectory_speed_color))
+        self.ui.dsb_color_speed_min.setValue(source_settings.float_value(SettingKey.min_color_speed))
+        self.ui.dsb_color_speed_max.setValue(source_settings.float_value(SettingKey.max_color_speed))
         self.ui.lb_frame_label_display.set_color(source_settings.value(SettingKey.frame_label_color))
         self.ui.spb_frame_label_size.setValue(source_settings.int_value(SettingKey.frame_label_size))
         self.ui.fcb_frame_label_font.setCurrentFont(source_settings.value(SettingKey.frame_label_font))
@@ -172,7 +223,13 @@ class SettingDialog(QDialog):
                     or self.settings.value(SettingKey.frame_label_color) != self.ui.lb_frame_label_display.colors \
                     or self.settings.int_value(SettingKey.frame_label_size) != self.ui.spb_frame_label_size.value() \
                     or self.settings.value(SettingKey.frame_label_font) != self.ui.fcb_frame_label_font.currentFont() \
-                    or self.settings.value(SettingKey.frame_label_pos) != self.ui.cb_frame_label_pos.currentIndex():
+                    or self.settings.value(SettingKey.frame_label_pos) != self.ui.cb_frame_label_pos.currentIndex() \
+                    or self.settings.boolean_value(
+                SettingKey.trajectory_color_with_speed) != self.ui.chb_color_with_speed.isChecked() \
+                    or self.settings.value(SettingKey.trajectory_speed_color) != self.ui.lb_speed_color_display.colors \
+                    or self.settings.float_value(SettingKey.max_color_speed) != self.ui.dsb_color_speed_max.value() \
+                    or self.settings.float_value(SettingKey.min_color_speed) != self.ui.dsb_color_speed_min.value():
+                # TODO  trajectory speed color 如何存储对象
                 display_updated = True
 
         target_settings = settings if settings else self.settings
@@ -212,6 +269,10 @@ class SettingDialog(QDialog):
         target_settings.set_value(SettingKey.trajectory_width, self.ui.spb_trajectory_width.value())
         target_settings.set_value(SettingKey.same_trajectory_color_with_particle,
                                   self.ui.chb_same_trajectory_color_with_particle.isChecked())
+        target_settings.set_value(SettingKey.trajectory_color_with_speed, self.ui.chb_color_with_speed.isChecked())
+        target_settings.set_value(SettingKey.trajectory_speed_color, self.ui.lb_speed_color_display.colors)
+        target_settings.set_value(SettingKey.min_color_speed, self.ui.dsb_color_speed_min.value())
+        target_settings.set_value(SettingKey.max_color_speed, self.ui.dsb_color_speed_max.value())
         target_settings.set_value(SettingKey.frame_label_color, self.ui.lb_frame_label_display.colors)
         target_settings.set_value(SettingKey.frame_label_size, self.ui.spb_frame_label_size.value())
         target_settings.set_value(SettingKey.frame_label_font, self.ui.fcb_frame_label_font.currentFont())

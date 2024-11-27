@@ -21,13 +21,13 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QSpacerItem, QSpinBox, QTabWidget, QVBoxLayout,
     QWidget)
 
-from src.view.custom_widget import ColorLabel
+from src.view.custom_widget import (ColorLabel, GradientLabel)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(485, 512)
+        Dialog.resize(485, 498)
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -580,8 +580,64 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_15.addWidget(self.chb_same_trajectory_color_with_particle)
 
+        self.chb_color_with_speed = QCheckBox(self.groupBox_8)
+        self.chb_color_with_speed.setObjectName(u"chb_color_with_speed")
+
+        self.horizontalLayout_15.addWidget(self.chb_color_with_speed)
+
 
         self.verticalLayout_4.addLayout(self.horizontalLayout_15)
+
+        self.horizontalLayout_19 = QHBoxLayout()
+        self.horizontalLayout_19.setObjectName(u"horizontalLayout_19")
+        self.lb_speed_color = QLabel(self.groupBox_8)
+        self.lb_speed_color.setObjectName(u"lb_speed_color")
+
+        self.horizontalLayout_19.addWidget(self.lb_speed_color)
+
+        self.lb_speed_color_display = GradientLabel(self.groupBox_8)
+        self.lb_speed_color_display.setObjectName(u"lb_speed_color_display")
+
+        self.horizontalLayout_19.addWidget(self.lb_speed_color_display)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_19)
+
+        self.horizontalLayout_20 = QHBoxLayout()
+        self.horizontalLayout_20.setObjectName(u"horizontalLayout_20")
+        self.lb_color_speed_min = QLabel(self.groupBox_8)
+        self.lb_color_speed_min.setObjectName(u"lb_color_speed_min")
+
+        self.horizontalLayout_20.addWidget(self.lb_color_speed_min)
+
+        self.dsb_color_speed_min = QDoubleSpinBox(self.groupBox_8)
+        self.dsb_color_speed_min.setObjectName(u"dsb_color_speed_min")
+        palette = QPalette()
+        brush = QBrush(QColor(136, 136, 136, 228))
+        brush.setStyle(Qt.SolidPattern)
+        palette.setBrush(QPalette.Disabled, QPalette.Text, brush)
+        self.dsb_color_speed_min.setPalette(palette)
+        self.dsb_color_speed_min.setMaximum(999999.000000000000000)
+
+        self.horizontalLayout_20.addWidget(self.dsb_color_speed_min)
+
+        self.lb_color_speed_max = QLabel(self.groupBox_8)
+        self.lb_color_speed_max.setObjectName(u"lb_color_speed_max")
+
+        self.horizontalLayout_20.addWidget(self.lb_color_speed_max)
+
+        self.dsb_color_speed_max = QDoubleSpinBox(self.groupBox_8)
+        self.dsb_color_speed_max.setObjectName(u"dsb_color_speed_max")
+        self.dsb_color_speed_max.setMaximumSize(QSize(16777215, 16777210))
+        palette1 = QPalette()
+        palette1.setBrush(QPalette.Disabled, QPalette.Text, brush)
+        self.dsb_color_speed_max.setPalette(palette1)
+        self.dsb_color_speed_max.setMaximum(999999.000000000000000)
+
+        self.horizontalLayout_20.addWidget(self.dsb_color_speed_max)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_20)
 
 
         self.verticalLayout7.addWidget(self.groupBox_8)
@@ -737,6 +793,11 @@ class Ui_Dialog(object):
         self.lb_trajectory_color_display.setText("")
         self.lb_trajectory_width.setText(QCoreApplication.translate("Dialog", u"\u8f68\u8ff9\u5bbd\u5ea6", None))
         self.chb_same_trajectory_color_with_particle.setText(QCoreApplication.translate("Dialog", u"\u4e0e\u7c92\u5b50\u989c\u8272\u76f8\u540c", None))
+        self.chb_color_with_speed.setText(QCoreApplication.translate("Dialog", u"\u989c\u8272\u968f\u901f\u5ea6\u53d8\u5316", None))
+        self.lb_speed_color.setText(QCoreApplication.translate("Dialog", u"\u901f\u5ea6\u989c\u8272", None))
+        self.lb_speed_color_display.setText("")
+        self.lb_color_speed_min.setText(QCoreApplication.translate("Dialog", u"\u6700\u5c0f\u901f\u5ea6(px/s)", None))
+        self.lb_color_speed_max.setText(QCoreApplication.translate("Dialog", u"\u6700\u5927\u901f\u5ea6(px/s)", None))
         self.groupBox_9.setTitle(QCoreApplication.translate("Dialog", u"\u5e27", None))
         self.lb_frame_label.setText(QCoreApplication.translate("Dialog", u"\u5e27\u53f7\u989c\u8272", None))
         self.lb_frame_label_display.setText("")
