@@ -1,4 +1,4 @@
-
+import math
 from typing import Tuple, Dict, List, Collection, Optional, Union
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QObject, Signal
@@ -400,10 +400,18 @@ class DataHelper(QObject):
         for particle_id, pos_list in particles.items():
             if len(pos_list) < 2:
                 continue
+            pre_pos = None if len(pos_list) == 2 else pos_list[-3]
             start_pos = pos_list[-2]
             end_pos = pos_list[-1]
-            frame_trajectory_items[particle_id] = TrajectoryItem(self.settings, particle_id, start_pos[0], start_pos[1],
-                                                                 end_pos[0], end_pos[1], end_pos[2] - start_pos[2])
+            pre_speed = None
+            if pre_pos:
+                pre_dis = math.sqrt((start_pos[0] - pre_pos[0]) ** 2 + (start_pos[1] - pre_pos[1]) ** 2)
+                pre_speed = pre_dis / (start_pos[2] - pre_pos[2])
+            item = TrajectoryItem(self.settings, particle_id, start_pos[0], start_pos[1],
+                                                                 end_pos[0], end_pos[1], end_pos[2] - start_pos[2],
+                                                                 pre_speed)
+            frame_trajectory_items[particle_id] = item
+
         self.trajectory_items[frame_index] = frame_trajectory_items
 
     def get_particle_items(self, frame_index: int) -> List[ParticleGroup]:

@@ -390,7 +390,8 @@ class ParticleGroup(QGraphicsItemGroup):
 
 
 class TrajectoryItem(QGraphicsLineItem):
-    def __init__(self, settings: Settings, index: int, x1, y1, x2, y2, frame_interval):
+    max_duration = 1000
+    def __init__(self, settings: Settings, index: int, x1, y1, x2, y2, frame_interval, pre_speed: float = None):
         """
         轨迹Item（一段）
         :param settings: 配置信息
@@ -406,31 +407,66 @@ class TrajectoryItem(QGraphicsLineItem):
         self.index = index
         self.distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
         self.speed = self.distance / frame_interval
+        self.pre_speed = pre_speed
         pen = QPen()
         pen.setStyle(Qt.PenStyle.SolidLine)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         self.setPen(pen)
+        self._interpolated = self.create_interpolated()
+        self._max_color_speed = self.settings.float_value(SettingKey.max_color_speed)
+        self._min_color_speed = self.settings.float_value(SettingKey.min_color_speed)
+
         self.refresh()
+
+    def create_interpolated(self) -> QPropertyAnimation:
+        speed_colors = self.settings.value(SettingKey.trajectory_speed_color)
+        interpolated = QPropertyAnimation()
+        interpolated.setDuration(1000)
+        if speed_colors and len(speed_colors) > 0:
+            for speed_color in speed_colors:
+                interpolated.setKeyValueAt(speed_color.pos, speed_color.color)
+        return interpolated
+
+    def get_speed_color(self, speed: float) -> QColor:
+        speed = min(self._max_color_speed, speed)
+        speed = max(self._min_color_speed, speed)
+        pos = (speed - self._min_color_speed) / (self._max_color_speed - self._min_color_speed)
+        self._interpolated.setCurrentTime(int(pos * self.max_duration))
+        return self._interpolated.currentValue()
 
     def refresh(self):
         """
         刷新显示
         """
         # 颜色
+        enable_speed_color = self.settings.boolean_value(SettingKey.trajectory_speed_color)
+        pen = self.pen()
+        if enable_speed_color:
+            gradient = QLinearGradient(self.line().x1(), self.line().y1(), self.line().x2(), self.line().y2())
+            end_color = self.get_speed_color(self.speed)
+            start_color = end_color if self.pre_speed is None else self.get_speed_color(self.pre_speed)
+            gradient.setColorAt(0, start_color)
+            gradient.setColorAt(1, end_color)
+            brush = QBrush(gradient)
+            brush.setStyle(Qt.BrushStyle.LinearGradientPattern)
+            pen.setBrush(brush)
+        else:
+            color = self.__choose_color()
+            pen.setColor(color)
+        self.setPen(pen)
+        # 显示/隐藏
+        show_trajectory = self.settings.boolean_value(SettingKey.show_trajectory)
+        self.setVisible(show_trajectory)
+
+    def __choose_color(self):
         same_color_with_particle = self.settings.boolean_value(SettingKey.same_trajectory_color_with_particle)
         if same_color_with_particle:
             colors = self.settings.list_value(SettingKey.particle_color)
         else:
             colors = self.settings.list_value(SettingKey.trajectory_color)
         colors = [QColor(c) for c in colors]
-        color = colors[self.index % len(colors)]
-        pen = self.pen()
-        pen.setColor(color)
-        self.setPen(pen)
-        # 显示/隐藏
-        show_trajectory = self.settings.boolean_value(SettingKey.show_trajectory)
-        self.setVisible(show_trajectory)
+        return colors[self.index % len(colors)]
 
 
 class FrameLabelItem(QGraphicsSimpleTextItem):

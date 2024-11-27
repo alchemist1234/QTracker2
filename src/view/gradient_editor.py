@@ -2,10 +2,10 @@ from typing import List, Optional
 
 from PySide6.QtCore import Signal, QSize, QModelIndex, Slot
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QDialog, QListWidgetItem, QColorDialog, QInputDialog
+from PySide6.QtWidgets import QDialog, QListWidgetItem, QColorDialog, QInputDialog, QMessageBox
 
 from src.model.models import GradientColor
-from src.view.custom_widget import GradientLabel, ColorItem, GradientItem
+from src.view.custom_widget import GradientLabel, GradientItem
 from src.ui.gradient_editor_ui import Ui_dialog_gradient_editor
 from src.util.common_util import random_color
 
@@ -42,7 +42,16 @@ class GradientEditor(QDialog):
         :param color: 待添加的颜色
         """
         if color is None:
-            pos, _ = QInputDialog.getDouble(self, '设置颜色位置', '颜色位置(0-1)', 0)
+            pos, res = QInputDialog.getDouble(self, '设置颜色位置', '颜色位置(0-1)', 0)
+            if not res:
+                return
+            if pos > 1 or pos < 0:
+                QMessageBox.warning(self, '无效位置', f'无效颜色位置：{pos}')
+                return
+            exist_pos = [] if not self.label else [gradient_color.pos for gradient_color in self.label.colors]
+            if pos in exist_pos:
+                QMessageBox.warning(self, '无效位置', f'已存在颜色位置：{pos}')
+                return
         else:
             pos = color.pos
         color = GradientColor(pos, random_color()) if color is None else color
