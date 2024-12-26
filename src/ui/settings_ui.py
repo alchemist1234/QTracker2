@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -27,7 +27,8 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(485, 498)
+        Dialog.resize(512, 503)
+        Dialog.setSizeGripEnabled(False)
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -61,6 +62,9 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_median_blur.sizePolicy().hasHeightForWidth())
         self.spb_median_blur.setSizePolicy(sizePolicy)
         self.spb_median_blur.setFrame(False)
+        self.spb_median_blur.setMinimum(1)
+        self.spb_median_blur.setMaximum(9999)
+        self.spb_median_blur.setSingleStep(2)
 
         self.horizontalLayout.addWidget(self.spb_median_blur)
 
@@ -78,6 +82,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_opening_size.sizePolicy().hasHeightForWidth())
         self.spb_opening_size.setSizePolicy(sizePolicy)
         self.spb_opening_size.setFrame(False)
+        self.spb_opening_size.setMaximum(9999)
 
         self.horizontalLayout.addWidget(self.spb_opening_size)
 
@@ -96,6 +101,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_gaussian_blur.sizePolicy().hasHeightForWidth())
         self.spb_gaussian_blur.setSizePolicy(sizePolicy)
         self.spb_gaussian_blur.setFrame(False)
+        self.spb_gaussian_blur.setMaximum(9999)
 
         self.horizontalLayout_2.addWidget(self.spb_gaussian_blur)
 
@@ -113,6 +119,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_closing_size.sizePolicy().hasHeightForWidth())
         self.spb_closing_size.setSizePolicy(sizePolicy)
         self.spb_closing_size.setFrame(False)
+        self.spb_closing_size.setMaximum(9999)
 
         self.horizontalLayout_2.addWidget(self.spb_closing_size)
 
@@ -140,6 +147,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_adaptive_hist_eq.sizePolicy().hasHeightForWidth())
         self.spb_adaptive_hist_eq.setSizePolicy(sizePolicy)
         self.spb_adaptive_hist_eq.setFrame(False)
+        self.spb_adaptive_hist_eq.setMaximum(9999)
 
         self.horizontalLayout_3.addWidget(self.spb_adaptive_hist_eq)
 
@@ -158,6 +166,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_bilateral_filter_size.sizePolicy().hasHeightForWidth())
         self.spb_bilateral_filter_size.setSizePolicy(sizePolicy)
         self.spb_bilateral_filter_size.setFrame(False)
+        self.spb_bilateral_filter_size.setMaximum(9999)
 
         self.horizontalLayout_4.addWidget(self.spb_bilateral_filter_size)
 
@@ -166,6 +175,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_bilateral_filter_color.sizePolicy().hasHeightForWidth())
         self.spb_bilateral_filter_color.setSizePolicy(sizePolicy)
         self.spb_bilateral_filter_color.setFrame(False)
+        self.spb_bilateral_filter_color.setMaximum(9999)
 
         self.horizontalLayout_4.addWidget(self.spb_bilateral_filter_color)
 
@@ -174,6 +184,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_bilateral_filter_space.sizePolicy().hasHeightForWidth())
         self.spb_bilateral_filter_space.setSizePolicy(sizePolicy)
         self.spb_bilateral_filter_space.setFrame(False)
+        self.spb_bilateral_filter_space.setMaximum(9999)
 
         self.horizontalLayout_4.addWidget(self.spb_bilateral_filter_space)
 
@@ -201,6 +212,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_search_radius.sizePolicy().hasHeightForWidth())
         self.spb_search_radius.setSizePolicy(sizePolicy)
         self.spb_search_radius.setFrame(False)
+        self.spb_search_radius.setMaximum(99999)
 
         self.horizontalLayout_5.addWidget(self.spb_search_radius)
 
@@ -218,6 +230,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_min_detect_area.sizePolicy().hasHeightForWidth())
         self.spb_min_detect_area.setSizePolicy(sizePolicy)
         self.spb_min_detect_area.setFrame(False)
+        self.spb_min_detect_area.setMaximum(999999)
 
         self.horizontalLayout_5.addWidget(self.spb_min_detect_area)
 
@@ -237,6 +250,7 @@ class Ui_Dialog(object):
         self.spb_memory_frames.setSizePolicy(sizePolicy)
         self.spb_memory_frames.setFrame(False)
         self.spb_memory_frames.setAccelerated(True)
+        self.spb_memory_frames.setMaximum(99999)
 
         self.horizontalLayout_6.addWidget(self.spb_memory_frames)
 
@@ -254,6 +268,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_max_detect_area.sizePolicy().hasHeightForWidth())
         self.spb_max_detect_area.setSizePolicy(sizePolicy)
         self.spb_max_detect_area.setFrame(False)
+        self.spb_max_detect_area.setMaximum(999999)
 
         self.horizontalLayout_6.addWidget(self.spb_max_detect_area)
 
@@ -282,6 +297,7 @@ class Ui_Dialog(object):
         self.spb_threshold.setSizePolicy(sizePolicy)
         self.spb_threshold.setWrapping(False)
         self.spb_threshold.setFrame(False)
+        self.spb_threshold.setMaximum(9999)
 
         self.horizontalLayout_7.addWidget(self.spb_threshold)
 
@@ -295,6 +311,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_derivative_order.sizePolicy().hasHeightForWidth())
         self.spb_derivative_order.setSizePolicy(sizePolicy)
         self.spb_derivative_order.setFrame(False)
+        self.spb_derivative_order.setMaximum(9999)
 
         self.horizontalLayout_7.addWidget(self.spb_derivative_order)
 
@@ -308,6 +325,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_kernel_size.sizePolicy().hasHeightForWidth())
         self.spb_kernel_size.setSizePolicy(sizePolicy)
         self.spb_kernel_size.setFrame(False)
+        self.spb_kernel_size.setMaximum(9999)
 
         self.horizontalLayout_7.addWidget(self.spb_kernel_size)
 
@@ -344,6 +362,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.spb_particle_radius_for_split.sizePolicy().hasHeightForWidth())
         self.spb_particle_radius_for_split.setSizePolicy(sizePolicy)
         self.spb_particle_radius_for_split.setFrame(False)
+        self.spb_particle_radius_for_split.setMaximum(9999)
 
         self.horizontalLayout_8.addWidget(self.spb_particle_radius_for_split)
 
@@ -374,65 +393,57 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_9.addWidget(self.dspb_scale)
 
-        self.horizontalSpacer_7 = QSpacerItem(80, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_7 = QSpacerItem(160, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_9.addItem(self.horizontalSpacer_7)
 
-        self.lb_skip_frames = QLabel(self.groupBox_5)
-        self.lb_skip_frames.setObjectName(u"lb_skip_frames")
-
-        self.horizontalLayout_9.addWidget(self.lb_skip_frames)
-
-        self.spb_skip_frames = QSpinBox(self.groupBox_5)
-        self.spb_skip_frames.setObjectName(u"spb_skip_frames")
-        sizePolicy.setHeightForWidth(self.spb_skip_frames.sizePolicy().hasHeightForWidth())
-        self.spb_skip_frames.setSizePolicy(sizePolicy)
-        self.spb_skip_frames.setFrame(False)
-
-        self.horizontalLayout_9.addWidget(self.spb_skip_frames)
-
+        self.horizontalLayout_9.setStretch(0, 1)
+        self.horizontalLayout_9.setStretch(1, 1)
+        self.horizontalLayout_9.setStretch(2, 2)
 
         self.verticalLayout6.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_10 = QHBoxLayout()
         self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
-        self.lb_from_frames = QLabel(self.groupBox_5)
-        self.lb_from_frames.setObjectName(u"lb_from_frames")
+        self.lb_start_frame = QLabel(self.groupBox_5)
+        self.lb_start_frame.setObjectName(u"lb_start_frame")
 
-        self.horizontalLayout_10.addWidget(self.lb_from_frames)
+        self.horizontalLayout_10.addWidget(self.lb_start_frame)
 
         self.horizontalSpacer_12 = QSpacerItem(20, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_10.addItem(self.horizontalSpacer_12)
 
-        self.spb_from_frames = QSpinBox(self.groupBox_5)
-        self.spb_from_frames.setObjectName(u"spb_from_frames")
-        sizePolicy.setHeightForWidth(self.spb_from_frames.sizePolicy().hasHeightForWidth())
-        self.spb_from_frames.setSizePolicy(sizePolicy)
-        self.spb_from_frames.setFrame(False)
+        self.spb_start_frame = QSpinBox(self.groupBox_5)
+        self.spb_start_frame.setObjectName(u"spb_start_frame")
+        sizePolicy.setHeightForWidth(self.spb_start_frame.sizePolicy().hasHeightForWidth())
+        self.spb_start_frame.setSizePolicy(sizePolicy)
+        self.spb_start_frame.setFrame(False)
+        self.spb_start_frame.setMaximum(99999)
 
-        self.horizontalLayout_10.addWidget(self.spb_from_frames)
+        self.horizontalLayout_10.addWidget(self.spb_start_frame)
 
         self.horizontalSpacer_11 = QSpacerItem(104, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_10.addItem(self.horizontalSpacer_11)
 
-        self.lb_to_frames = QLabel(self.groupBox_5)
-        self.lb_to_frames.setObjectName(u"lb_to_frames")
+        self.lb_stop_frame = QLabel(self.groupBox_5)
+        self.lb_stop_frame.setObjectName(u"lb_stop_frame")
 
-        self.horizontalLayout_10.addWidget(self.lb_to_frames)
+        self.horizontalLayout_10.addWidget(self.lb_stop_frame)
 
         self.horizontalSpacer_13 = QSpacerItem(16, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_10.addItem(self.horizontalSpacer_13)
 
-        self.spb_to_frames = QSpinBox(self.groupBox_5)
-        self.spb_to_frames.setObjectName(u"spb_to_frames")
-        sizePolicy.setHeightForWidth(self.spb_to_frames.sizePolicy().hasHeightForWidth())
-        self.spb_to_frames.setSizePolicy(sizePolicy)
-        self.spb_to_frames.setFrame(False)
+        self.spb_stop_frame = QSpinBox(self.groupBox_5)
+        self.spb_stop_frame.setObjectName(u"spb_stop_frame")
+        sizePolicy.setHeightForWidth(self.spb_stop_frame.sizePolicy().hasHeightForWidth())
+        self.spb_stop_frame.setSizePolicy(sizePolicy)
+        self.spb_stop_frame.setFrame(False)
+        self.spb_stop_frame.setMaximum(99999)
 
-        self.horizontalLayout_10.addWidget(self.spb_to_frames)
+        self.horizontalLayout_10.addWidget(self.spb_stop_frame)
 
 
         self.verticalLayout6.addLayout(self.horizontalLayout_10)
@@ -440,11 +451,11 @@ class Ui_Dialog(object):
 
         self.verticalLayout1.addWidget(self.groupBox_5)
 
-        self.verticalLayout1.setStretch(0, 4)
-        self.verticalLayout1.setStretch(1, 2)
-        self.verticalLayout1.setStretch(2, 1)
-        self.verticalLayout1.setStretch(3, 1)
-        self.verticalLayout1.setStretch(4, 2)
+        self.verticalLayout1.setStretch(0, 30)
+        self.verticalLayout1.setStretch(1, 17)
+        self.verticalLayout1.setStretch(2, 10)
+        self.verticalLayout1.setStretch(3, 10)
+        self.verticalLayout1.setStretch(4, 17)
         self.tabWidget.addTab(self.tab_analyze, "")
         self.tab_display = QWidget()
         self.tab_display.setObjectName(u"tab_display")
@@ -479,6 +490,7 @@ class Ui_Dialog(object):
 
         self.spb_particle_size = QSpinBox(self.groupBox_6)
         self.spb_particle_size.setObjectName(u"spb_particle_size")
+        self.spb_particle_size.setMaximum(999)
 
         self.horizontalLayout_11.addWidget(self.spb_particle_size)
 
@@ -511,6 +523,7 @@ class Ui_Dialog(object):
 
         self.spb_mark_size = QSpinBox(self.groupBox_7)
         self.spb_mark_size.setObjectName(u"spb_mark_size")
+        self.spb_mark_size.setMaximum(999)
 
         self.horizontalLayout_12.addWidget(self.spb_mark_size)
 
@@ -665,6 +678,7 @@ class Ui_Dialog(object):
 
         self.spb_frame_label_size = QSpinBox(self.groupBox_9)
         self.spb_frame_label_size.setObjectName(u"spb_frame_label_size")
+        self.spb_frame_label_size.setMaximum(999)
 
         self.horizontalLayout_17.addWidget(self.spb_frame_label_size)
 
@@ -774,9 +788,8 @@ class Ui_Dialog(object):
         self.lb_particle_radius_for_split.setText(QCoreApplication.translate("Dialog", u"\u5206\u5272\u7c92\u5b50\u5c3a\u5bf8", None))
         self.groupBox_5.setTitle("")
         self.lb_scale.setText(QCoreApplication.translate("Dialog", u"\u6bd4\u4f8b\u5c3a(px/\u03bcm)", None))
-        self.lb_skip_frames.setText(QCoreApplication.translate("Dialog", u"\u8df3\u8fc7\u5e27", None))
-        self.lb_from_frames.setText(QCoreApplication.translate("Dialog", u"\u8d77\u59cb\u5e27", None))
-        self.lb_to_frames.setText(QCoreApplication.translate("Dialog", u"\u7ed3\u675f\u5e27", None))
+        self.lb_start_frame.setText(QCoreApplication.translate("Dialog", u"\u8d77\u59cb\u5e27", None))
+        self.lb_stop_frame.setText(QCoreApplication.translate("Dialog", u"\u7ed3\u675f\u5e27", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_analyze), QCoreApplication.translate("Dialog", u"\u5206\u6790", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("Dialog", u"\u7c92\u5b50", None))
         self.lb_particle_color.setText(QCoreApplication.translate("Dialog", u"\u7c92\u5b50\u989c\u8272", None))

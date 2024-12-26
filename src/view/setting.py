@@ -1,8 +1,8 @@
 from typing import List
 
-from PySide6.QtWidgets import QDialog, QFileDialog
+from PySide6.QtWidgets import QDialog, QFileDialog, QSpinBox
 from PySide6.QtCore import Slot, Qt, Signal
-from PySide6.QtGui import QColor, QGradient
+from PySide6.QtGui import QColor
 
 from src.model.models import GradientColor
 from src.ui.settings_ui import Ui_Dialog
@@ -39,6 +39,8 @@ class SettingDialog(QDialog):
         """
         设置信号-槽连接
         """
+        self.ui.spb_median_blur.editingFinished.connect(lambda: self.check_odd_value(self.ui.spb_median_blur))
+        self.ui.spb_gaussian_blur.editingFinished.connect(lambda: self.check_odd_value(self.ui.spb_gaussian_blur))
         self.ui.lb_particle_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_particle_color_display))
         self.ui.lb_mark_color_display.clicked.connect(lambda x: self.edit_colors(self.ui.lb_mark_color_display))
         self.ui.lb_trajectory_color_display.clicked.connect(
@@ -54,6 +56,16 @@ class SettingDialog(QDialog):
         self.ui.btn_load_settings.clicked.connect(self.load_settings_from_file)
         self.ui.btn_save_settings.clicked.connect(self.save_settings_to_file)
         self.accepted.connect(self.save_settings)
+
+    @Slot(QSpinBox)
+    def check_odd_value(self, spin_box: QSpinBox):
+        """
+        限制SpinBox只允许输入奇数
+        :param spin_box: SpinBox控件
+        """
+        value = spin_box.value()
+        if value % 2 == 0:
+            spin_box.setValue(value + 1)
 
     @Slot(Qt.CheckState)
     def mark_color_state(self, state: Qt.CheckState) -> None:
@@ -176,9 +188,8 @@ class SettingDialog(QDialog):
         self.ui.spb_kernel_size.setValue(source_settings.int_value(SettingKey.kernel_size))
         self.ui.chb_split_particles.setChecked(source_settings.boolean_value(SettingKey.split_circular_particles))
         self.ui.spb_particle_radius_for_split.setValue(source_settings.int_value(SettingKey.split_radius))
-        self.ui.spb_skip_frames.setValue(source_settings.int_value(SettingKey.skip_frames))
-        self.ui.spb_from_frames.setValue(source_settings.int_value(SettingKey.from_frames))
-        self.ui.spb_to_frames.setValue(source_settings.int_value(SettingKey.to_frames))
+        self.ui.spb_start_frame.setValue(source_settings.int_value(SettingKey.start_frame))
+        self.ui.spb_stop_frame.setValue(source_settings.int_value(SettingKey.stop_frame))
         self.ui.dspb_scale.setValue(source_settings.float_value(SettingKey.scale))
         # Display
         self.ui.lb_particle_color_display.set_color(source_settings.value(SettingKey.particle_color))
@@ -251,9 +262,8 @@ class SettingDialog(QDialog):
         target_settings.set_value(SettingKey.kernel_size, self.ui.spb_kernel_size.value())
         target_settings.set_value(SettingKey.split_circular_particles, self.ui.chb_split_particles.isChecked())
         target_settings.set_value(SettingKey.split_radius, self.ui.spb_particle_radius_for_split.value())
-        target_settings.set_value(SettingKey.skip_frames, self.ui.spb_skip_frames.value())
-        target_settings.set_value(SettingKey.from_frames, self.ui.spb_from_frames.value())
-        target_settings.set_value(SettingKey.to_frames, self.ui.spb_to_frames.value())
+        target_settings.set_value(SettingKey.start_frame, self.ui.spb_start_frame.value())
+        target_settings.set_value(SettingKey.stop_frame, self.ui.spb_stop_frame.value())
         target_settings.set_value(SettingKey.scale, self.ui.dspb_scale.value())
 
         # Display

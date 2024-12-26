@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
 
         # 视频加载线程
         self.video_loader_thread = QThread()
-        self.video_loader = VideoLoader()
+        self.video_loader = VideoLoader(settings)
         self.video_loader.moveToThread(self.video_loader_thread)
 
         # 视频分析线程

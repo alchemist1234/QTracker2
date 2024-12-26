@@ -6,17 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>485</width>
-    <height>498</height>
+    <width>512</width>
+    <height>503</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
     <enum>QLayout::SizeConstraint::SetFixedSize</enum>
    </property>
@@ -32,7 +35,7 @@
       <attribute name="title">
        <string>分析</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout1" stretch="4,2,1,1,2">
+      <layout class="QVBoxLayout" name="verticalLayout1" stretch="30,17,10,10,17">
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
@@ -77,6 +80,15 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
+              <property name="singleStep">
+               <number>2</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -113,6 +125,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
            </layout>
@@ -136,6 +151,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
               </property>
              </widget>
             </item>
@@ -172,6 +190,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
               </property>
              </widget>
             </item>
@@ -220,6 +241,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
            </layout>
@@ -244,6 +268,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -257,6 +284,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -269,6 +299,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
               </property>
              </widget>
             </item>
@@ -318,6 +351,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>99999</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -354,6 +390,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>999999</number>
+              </property>
              </widget>
             </item>
            </layout>
@@ -380,6 +419,9 @@
               </property>
               <property name="accelerated">
                <bool>true</bool>
+              </property>
+              <property name="maximum">
+               <number>99999</number>
               </property>
              </widget>
             </item>
@@ -416,6 +458,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>999999</number>
               </property>
              </widget>
             </item>
@@ -468,6 +513,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -488,6 +536,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -507,6 +558,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>9999</number>
               </property>
              </widget>
             </item>
@@ -579,6 +633,9 @@
               <property name="frame">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>9999</number>
+              </property>
              </widget>
             </item>
            </layout>
@@ -608,7 +665,7 @@
            <number>8</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,1,2">
             <item>
              <widget class="QLabel" name="lb_scale">
               <property name="text">
@@ -639,38 +696,18 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>80</width>
+                <width>160</width>
                 <height>20</height>
                </size>
               </property>
              </spacer>
-            </item>
-            <item>
-             <widget class="QLabel" name="lb_skip_frames">
-              <property name="text">
-               <string>跳过帧</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="spb_skip_frames">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="frame">
-               <bool>false</bool>
-              </property>
-             </widget>
             </item>
            </layout>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_10">
             <item>
-             <widget class="QLabel" name="lb_from_frames">
+             <widget class="QLabel" name="lb_start_frame">
               <property name="text">
                <string>起始帧</string>
               </property>
@@ -693,7 +730,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QSpinBox" name="spb_from_frames">
+             <widget class="QSpinBox" name="spb_start_frame">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -702,6 +739,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>99999</number>
               </property>
              </widget>
             </item>
@@ -722,7 +762,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="lb_to_frames">
+             <widget class="QLabel" name="lb_stop_frame">
               <property name="text">
                <string>结束帧</string>
               </property>
@@ -745,7 +785,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QSpinBox" name="spb_to_frames">
+             <widget class="QSpinBox" name="spb_stop_frame">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -754,6 +794,9 @@
               </property>
               <property name="frame">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>99999</number>
               </property>
              </widget>
             </item>
@@ -811,7 +854,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="spb_particle_size"/>
+             <widget class="QSpinBox" name="spb_particle_size">
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -848,7 +895,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="spb_mark_size"/>
+             <widget class="QSpinBox" name="spb_mark_size">
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -1064,7 +1115,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="spb_frame_label_size"/>
+             <widget class="QSpinBox" name="spb_frame_label_size">
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>

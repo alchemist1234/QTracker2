@@ -20,8 +20,9 @@ class VideoLoader(QObject):
     sig_first_frame_finished = Signal(int)
     sig_all_frame_finished = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, settings:Settings, parent=None):
         super(VideoLoader, self).__init__(parent)
+        self.settings = settings
 
     @Slot(str)
     def load(self, path: str) -> None:
@@ -29,14 +30,21 @@ class VideoLoader(QObject):
         加载视频文件
         :param path: 视频文件地址
         """
+        start_frame = self.settings.int_value(SettingKey.start_frame)
+        stop_frame = self.settings.int_value(SettingKey.stop_frame)
+
         video = cv2.VideoCapture(path)
         # get meta info
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = int(video.get(cv2.CAP_PROP_FPS))
         frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+        if 0 < start_frame <= stop_frame and stop_frame > 0:
+            frame_count = min(stop_frame - start_frame + 1, frame_count)
         meta_info = VideoMetaInfo(width, height, fps, frame_count)
         self.sig_meta_info_updated.emit(meta_info)
+
+        skips = 0
 
         if video.isOpened():
             index = 0
@@ -44,13 +52,19 @@ class VideoLoader(QObject):
                 ret, frame = video.read()
                 if not ret:
                     break
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                if skips < start_frame - 1:
+                    skips += 1
+                    continue
+
                 index += 1
+
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 self.sig_frame_finished.emit(index, frame)
                 if index == 1:
                     self.sig_first_frame_finished.emit(1)
                 if index == frame_count:
                     self.sig_all_frame_finished.emit()
+                    break
 
 
 class Analyzer(QObject):
