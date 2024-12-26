@@ -440,7 +440,7 @@ class TrajectoryItem(QGraphicsLineItem):
         刷新显示
         """
         # 颜色
-        enable_speed_color = self.settings.boolean_value(SettingKey.trajectory_speed_color)
+        enable_speed_color = self.settings.boolean_value(SettingKey.trajectory_color_with_speed)
         pen = self.pen()
         if enable_speed_color:
             gradient = QLinearGradient(self.line().x1(), self.line().y1(), self.line().x2(), self.line().y2())
