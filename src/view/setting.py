@@ -229,7 +229,6 @@ class SettingDialog(QDialog):
                     or self.settings.value(SettingKey.trajectory_speed_color) != self.ui.lb_speed_color_display.colors \
                     or self.settings.float_value(SettingKey.max_color_speed) != self.ui.dsb_color_speed_max.value() \
                     or self.settings.float_value(SettingKey.min_color_speed) != self.ui.dsb_color_speed_min.value():
-                # TODO  trajectory speed color 如何存储对象
                 display_updated = True
 
         target_settings = settings if settings else self.settings

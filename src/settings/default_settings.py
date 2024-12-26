@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 from enum import Enum
-from PySide6.QtGui import QColor, QFont, QLinearGradient, QColorConstants
+from PySide6.QtGui import QColor, QFont, QColorConstants
 
 from src.model.models import GradientColor
 

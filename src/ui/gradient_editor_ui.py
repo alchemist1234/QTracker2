@@ -34,11 +34,21 @@ class Ui_dialog_gradient_editor(object):
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.lb_gradient_display = GradientLabel(dialog_gradient_editor)
         self.lb_gradient_display.setObjectName(u"lb_gradient_display")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lb_gradient_display.sizePolicy().hasHeightForWidth())
+        self.lb_gradient_display.setSizePolicy(sizePolicy)
 
         self.verticalLayout_2.addWidget(self.lb_gradient_display)
 
         self.lw_colors = QListWidget(dialog_gradient_editor)
         self.lw_colors.setObjectName(u"lw_colors")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.lw_colors.sizePolicy().hasHeightForWidth())
+        self.lw_colors.setSizePolicy(sizePolicy1)
         self.lw_colors.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.lw_colors.setMovement(QListView.Movement.Snap)
         self.lw_colors.setGridSize(QSize(100, 32))
@@ -77,6 +87,7 @@ class Ui_dialog_gradient_editor(object):
 
         self.horizontalLayout.addLayout(self.verticalLayout)
 
+        self.horizontalLayout.setStretch(0, 1)
 
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
 

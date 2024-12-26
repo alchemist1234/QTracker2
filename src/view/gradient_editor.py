@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from PySide6.QtCore import Signal, QSize, QModelIndex, Slot
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Signal, QSize, QModelIndex, Slot, QEvent
+from PySide6.QtGui import QColor, QResizeEvent
 from PySide6.QtWidgets import QDialog, QListWidgetItem, QColorDialog, QInputDialog, QMessageBox
 
 from src.model.models import GradientColor
@@ -20,6 +20,7 @@ class GradientEditor(QDialog):
         self.label = label
         self.ui = Ui_dialog_gradient_editor()
         self.ui.setupUi(self)
+        self.ui.lb_gradient_display.setFixedHeight(20)
 
         self.ui.btn_add.clicked.connect(lambda x: self.add_color())
         self.ui.btn_delete.clicked.connect(self.delete_color)
@@ -48,7 +49,7 @@ class GradientEditor(QDialog):
             if pos > 1 or pos < 0:
                 QMessageBox.warning(self, '无效位置', f'无效颜色位置：{pos}')
                 return
-            exist_pos = [] if not self.label else [gradient_color.pos for gradient_color in self.label.colors]
+            exist_pos = [] if not self.label else [gradient_color.pos for gradient_color in self.get_colors()]
             if pos in exist_pos:
                 QMessageBox.warning(self, '无效位置', f'已存在颜色位置：{pos}')
                 return
@@ -61,6 +62,7 @@ class GradientEditor(QDialog):
         item.setSizeHint(QSize(size.width(), size.height()))
         self.ui.lw_colors.addItem(item)
         self.ui.lw_colors.setItemWidget(item, widget)
+        self.refresh_color_label()
 
     @Slot(QModelIndex)
     def edit_color(self, model_index: QModelIndex) -> None:
@@ -72,7 +74,9 @@ class GradientEditor(QDialog):
         origin_color = widget.gradient_color
         color = QColorDialog.getColor(origin_color.color, self)
         if color.isValid():
-            widget.update_color(color)
+            gradient_color = GradientColor(origin_color.pos, color)
+            widget.update_color(gradient_color)
+            self.refresh_color_label()
 
     @Slot()
     def delete_color(self) -> None:
@@ -80,6 +84,10 @@ class GradientEditor(QDialog):
         删除当前选中颜色
         """
         self.ui.lw_colors.takeItem(self.ui.lw_colors.currentRow())
+        self.refresh_color_label()
+
+    def refresh_color_label(self):
+        self.ui.lb_gradient_display.set_gradient(self.get_colors())
 
     def get_colors(self) -> List[GradientColor]:
         """
@@ -99,3 +107,7 @@ class GradientEditor(QDialog):
         """
         self.sig_gradient_changed.emit(self.label, self.get_colors())
         super(GradientEditor, self).accept()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.refresh_color_label()
+        super(GradientEditor, self).resizeEvent(event)
