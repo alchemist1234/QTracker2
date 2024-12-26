@@ -75,11 +75,12 @@ class ResultDialog(QDialog):
         # 输入粒子ID，为空输出所有粒子
         text, ok = QInputDialog.getText(self, '请输入', '粒子ID')
         ids = self.scene.data_helper.get_all_particle_ids()
-        if ok:
-            text_ids = common_util.split_indexes_text(text)
-            if len(text_ids) > 0:
-                ids = list(text_ids)
-                ids.sort()
+        if not ok:
+            return
+        text_ids = common_util.split_indexes_text(text)
+        if len(text_ids) > 0:
+            ids = list(text_ids)
+            ids.sort()
         # TODO 无权限时程序会退出
         file_name, _ = QFileDialog.getSaveFileName(self, 'Export Data', '', filter='CSV File(*.csv)')
         if file_name:

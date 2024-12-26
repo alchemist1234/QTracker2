@@ -1,0 +1,1 @@
+pyside6-deploy.exe -c .\pysidedeploy.spec -f
