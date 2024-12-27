@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'about.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -38,6 +38,29 @@ class Ui_dialog_about(object):
 
 
         self.verticalLayout.addLayout(self.horizontalLayout)
+
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_5.addItem(self.horizontalSpacer_7)
+
+        self.lb_version = QLabel(dialog_about)
+        self.lb_version.setObjectName(u"lb_version")
+
+        self.horizontalLayout_5.addWidget(self.lb_version)
+
+        self.lb_version_no = QLabel(dialog_about)
+        self.lb_version_no.setObjectName(u"lb_version_no")
+
+        self.horizontalLayout_5.addWidget(self.lb_version_no)
+
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_5.addItem(self.horizontalSpacer_8)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -122,6 +145,8 @@ class Ui_dialog_about(object):
     def retranslateUi(self, dialog_about):
         dialog_about.setWindowTitle(QCoreApplication.translate("dialog_about", u"\u5173\u4e8e", None))
         self.lb_favicon.setText("")
+        self.lb_version.setText(QCoreApplication.translate("dialog_about", u"\u7248\u672c: ", None))
+        self.lb_version_no.setText("")
         self.lb_github.setText(QCoreApplication.translate("dialog_about", u"Github: ", None))
         self.lb_github_url.setText(QCoreApplication.translate("dialog_about", u"<a style='color:blue' href=https://github.com/alchemist1234/QTracker>https://github.com/alchemist1234/QTracker", None))
         self.lb_gitee.setText(QCoreApplication.translate("dialog_about", u"Gitee: ", None))

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import Signal, QThread, QTimer, Slot, Qt
 from PySide6.QtGui import QIcon
 
+from src import version
 from src.settings.settings import Settings
 from src.settings.default_settings import SettingKey
 from src.view.setting import SettingDialog
@@ -353,6 +354,7 @@ class MainWindow(QMainWindow):
         打开关于窗口
         """
         self.about_dialog = AboutDialog()
+        self.about_dialog.ui.lb_version_no.setText(version)
         self.about_dialog.show()
 
     def update_loading_progress(self, frame: int) -> None:
