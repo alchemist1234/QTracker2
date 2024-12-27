@@ -39,6 +39,9 @@ class VideoLoader(QObject):
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = int(video.get(cv2.CAP_PROP_FPS))
         frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+        if start_frame > frame_count:
+            start_frame = 1
+        stop_frame = min(stop_frame, frame_count)
         if 0 < start_frame <= stop_frame and stop_frame > 0:
             frame_count = min(stop_frame - start_frame + 1, frame_count)
         meta_info = VideoMetaInfo(width, height, fps, frame_count)
@@ -51,6 +54,11 @@ class VideoLoader(QObject):
             while True:
                 ret, frame = video.read()
                 if not ret:
+                    if index != frame_count:
+                        # 如果读取的帧数与元数据帧数不一样，重新发送meta_info_updated信号
+                        meta_info.frame_count = index
+                        self.sig_meta_info_updated.emit(meta_info)
+                    self.sig_all_frame_finished.emit()
                     break
                 if skips < start_frame - 1:
                     skips += 1
@@ -60,8 +68,8 @@ class VideoLoader(QObject):
 
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 self.sig_frame_finished.emit(index, frame)
-                if index == 1:
-                    self.sig_first_frame_finished.emit(1)
+                # if index == 1:
+                #     self.sig_first_frame_finished.emit(1)
                 if index == frame_count:
                     self.sig_all_frame_finished.emit()
                     break

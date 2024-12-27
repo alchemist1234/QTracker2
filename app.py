@@ -1,6 +1,7 @@
 import sys
 
 from PySide6.QtWidgets import QApplication
+import PySide6.QtAsyncio as QtAsyncio
 
 from src.view.main import MainWindow, Settings
 
@@ -9,4 +10,5 @@ if __name__ == '__main__':
     settings = Settings("config.ini")
     window = MainWindow(settings)
     window.show()
+    QtAsyncio.run(handle_sigint=True)
     sys.exit(app.exec())

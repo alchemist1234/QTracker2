@@ -1,5 +1,6 @@
 import os
 from typing import Tuple, List
+import asyncio
 
 import cv2
 import numpy as np
@@ -80,7 +81,7 @@ class VideoScene(QGraphicsScene):
         return item
 
     @Slot(int, np.ndarray)
-    def add_frame(self, index: int, frame: np.ndarray) -> None:
+    async def add_frame(self, index: int, frame: np.ndarray) -> None:
         """
         添加帧图像
         :param index: 帧ID
@@ -88,7 +89,7 @@ class VideoScene(QGraphicsScene):
         """
         h, w, c = frame.shape
         img = QImage(frame.data, w, h, QImage.Format.Format_RGB888)
-        self.frames_base64[index] = self.__img_to_base64(img)
+        await self.save_frame_base64(index, img)
 
     @Slot(int)
     def change_display(self, index: int) -> None:
@@ -239,10 +240,10 @@ class VideoScene(QGraphicsScene):
         self.settings.set_value(SettingKey.show_frame_label, show)
         self.change_display(self.current_frame_index)
 
-    @staticmethod
-    def __img_to_base64(img: QImage) -> bytes:
+    async def save_frame_base64(self, index: int, img: QImage):
         """
         QImage 转 Base64
+        :param index: 帧号
         :param img: QImage
         :return: Base64 bytes
         """
@@ -251,7 +252,9 @@ class VideoScene(QGraphicsScene):
         buffer = QBuffer(byte_arr)
         buffer.open(QBuffer.OpenModeFlag.WriteOnly)
         img.save(buffer, 'jpg', 100)
-        return byte_arr.toBase64().data()
+        self.frames_base64[index] = byte_arr.toBase64().data()
+        if index == 1:
+            self.change_display(1)
 
     def clear_data(self) -> None:
         """

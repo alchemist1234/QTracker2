@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 import numpy as np
 from PySide6.QtWidgets import *
@@ -109,10 +110,10 @@ class MainWindow(QMainWindow):
         self.sig_start_load.connect(self.video_loader.load)
         self.sig_start_analyze.connect(self.analyzer.start_and_run)
         self.video_loader.sig_meta_info_updated.connect(self.video_meta_updated)
-        self.video_loader.sig_frame_finished.connect(self.scene.add_frame)
+        self.video_loader.sig_frame_finished.connect(lambda index, frame: asyncio.ensure_future(self.scene.add_frame(index, frame)))
         self.video_loader.sig_frame_finished.connect(self.analyze_data)
         self.video_loader.sig_frame_finished.connect(self.update_loading_progress)
-        self.video_loader.sig_first_frame_finished.connect(self.scene.change_display)
+        # self.video_loader.sig_first_frame_finished.connect(self.scene.change_display)
         self.video_loader.sig_all_frame_finished.connect(self.all_analyze_data_send)
         self.ui.sl_frame.valueChanged.connect(self.scene.change_display)
         self.ui.sl_frame.valueChanged.connect(self.update_lcd_value)
@@ -390,9 +391,10 @@ class MainWindow(QMainWindow):
         """
         # 停止子线程
         self.analyzer.stop()
-        self.video_loader_thread.quit()
         # 等待子线程退出
+        self.video_loader_thread.quit()
         self.video_loader_thread.wait()
         self.analyzer_thread.quit()
         self.analyzer_thread.wait()
+        # 停止状态栏计时器
         super().closeEvent(event)
