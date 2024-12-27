@@ -174,7 +174,6 @@ class VideoScene(QGraphicsScene):
         :param frame_index: 帧ID
         :param particles: 粒子数据, {粒子ID:(x, y),...}
         """
-        print(frame_index, particles)
         particle_map = {p[0]: p[1] for p in particles}
         self.data_helper.add_frame_particles(frame_index, particle_map)
         self.data_helper.add_frame_label(frame_index)

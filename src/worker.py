@@ -205,7 +205,6 @@ class Analyzer(QObject):
         except Exception as e:
             # 防止分析过程中重新加载视频，self.history_particles被清空，遍历时报错导致线程退出后无法再次分析
             pass
-        print(f'frame analyzed: {frame_index}, particles: {len(frame_particles)}')
         return frame_particles
 
     def same_particle(self, old_center, new_center) -> bool:

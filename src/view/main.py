@@ -173,7 +173,6 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, caption='Open File',
                                               filter='Video Files(*.mp4 *.avi *.mkv *.flv);;All File(*.*)')
         if path:
-            print(f'path: {path}, ext: {_}')
             self.file_path = path
             self.sig_update_path.emit(path)
             self.sig_pre_analyze.emit(path)
