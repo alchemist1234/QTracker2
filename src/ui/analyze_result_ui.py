@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'analyze_result.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -18,12 +18,16 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QHBoxLayout,
     QHeaderView, QLabel, QPushButton, QSizePolicy,
     QSpacerItem, QTableView, QVBoxLayout, QWidget)
+import resources_rc
 
 class Ui_dialog_result(object):
     def setupUi(self, dialog_result):
         if not dialog_result.objectName():
             dialog_result.setObjectName(u"dialog_result")
         dialog_result.resize(466, 311)
+        icon = QIcon()
+        icon.addFile(u":/icon/favicon", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        dialog_result.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(dialog_result)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_3 = QHBoxLayout()
@@ -87,7 +91,7 @@ class Ui_dialog_result(object):
     # setupUi
 
     def retranslateUi(self, dialog_result):
-        dialog_result.setWindowTitle(QCoreApplication.translate("dialog_result", u"Dialog", None))
+        dialog_result.setWindowTitle(QCoreApplication.translate("dialog_result", u"\u5206\u6790\u7ed3\u679c", None))
         self.lb_particle.setText(QCoreApplication.translate("dialog_result", u"\u7c92\u5b50", None))
         self.btn_export.setText(QCoreApplication.translate("dialog_result", u"\u5bfc\u51fa\u6570\u636e", None))
         self.btn_close.setText(QCoreApplication.translate("dialog_result", u"\u5173\u95ed", None))

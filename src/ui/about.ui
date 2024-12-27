@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>关于</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../../resources.qrc">
+    <normaloff>:/icon/favicon</normaloff>:/icon/favicon</iconset>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">

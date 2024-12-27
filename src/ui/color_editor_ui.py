@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'color_editor.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.0
+## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -70,7 +70,7 @@ class Ui_dialog_color_editor(object):
     # setupUi
 
     def retranslateUi(self, dialog_color_editor):
-        dialog_color_editor.setWindowTitle(QCoreApplication.translate("dialog_color_editor", u"Dialog", None))
+        dialog_color_editor.setWindowTitle(QCoreApplication.translate("dialog_color_editor", u"\u989c\u8272\u8bbe\u7f6e", None))
         self.btn_add.setText(QCoreApplication.translate("dialog_color_editor", u"\u6dfb\u52a0\u989c\u8272", None))
         self.btn_delete.setText(QCoreApplication.translate("dialog_color_editor", u"\u5220\u9664\u989c\u8272", None))
         self.btn_ok.setText(QCoreApplication.translate("dialog_color_editor", u"\u786e\u5b9a", None))

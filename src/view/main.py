@@ -397,5 +397,5 @@ class MainWindow(QMainWindow):
         self.video_loader_thread.wait()
         self.analyzer_thread.quit()
         self.analyzer_thread.wait()
-        # 停止状态栏计时器
+        self.status_bar.timer.stop()
         super().closeEvent(event)

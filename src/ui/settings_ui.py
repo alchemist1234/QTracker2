@@ -22,12 +22,16 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QWidget)
 
 from src.view.custom_widget import (ColorLabel, GradientLabel)
+import resources_rc
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(512, 503)
+        icon = QIcon()
+        icon.addFile(u":/icon/favicon", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        Dialog.setWindowIcon(icon)
         Dialog.setSizeGripEnabled(False)
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
@@ -765,7 +769,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"\u8bbe\u7f6e", None))
         self.groupBox.setTitle("")
         self.lb_median_blur.setText(QCoreApplication.translate("Dialog", u"\u4e2d\u503c\u6a21\u7cca", None))
         self.lb_opening_size.setText(QCoreApplication.translate("Dialog", u"\u5f00\u8fd0\u7b97", None))

@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>设置</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../../resources.qrc">
+    <normaloff>:/icon/favicon</normaloff>:/icon/favicon</iconset>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>
@@ -1256,6 +1260,8 @@
    <header>src.view.custom_widget</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

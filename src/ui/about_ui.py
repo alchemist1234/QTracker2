@@ -24,6 +24,9 @@ class Ui_dialog_about(object):
         if not dialog_about.objectName():
             dialog_about.setObjectName(u"dialog_about")
         dialog_about.resize(395, 360)
+        icon = QIcon()
+        icon.addFile(u":/icon/favicon", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        dialog_about.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(dialog_about)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout = QHBoxLayout()
