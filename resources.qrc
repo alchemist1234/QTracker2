@@ -5,6 +5,7 @@
     <file alias="add">resources/icons/add-circle-line.png</file>
     <file alias="index">resources/icons/index.png</file>
     <file alias="bubble">resources/icons/chart-bubble.png</file>
+    <file alias="about">resources/icons/about.png</file>
     <file alias="crop">resources/icons/crop-line.png</file>
     <file alias="cursor">resources/icons/cursor-default.png</file>
     <file alias="numeric">resources/icons/numeric.png</file>

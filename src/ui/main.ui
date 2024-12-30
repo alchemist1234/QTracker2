@@ -257,6 +257,10 @@
    </property>
   </action>
   <action name="m_act_about">
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/icon/about</normaloff>:/icon/about</iconset>
+   </property>
    <property name="text">
     <string>关于</string>
    </property>
