@@ -144,6 +144,7 @@ class MainWindow(QMainWindow):
         self.scene.sig_frame_changed.connect(self.update_lcd_value)
         self.scene.sig_frame_changed.connect(self.update_slider_value)
         self.scene.sig_calculate_particle.connect(self.update_analyzing_progress)
+        self.scene.sig_mouse_move.connect(self.status_bar.update_pos)
 
     @Slot(int, np.ndarray)
     def analyze_data(self, frame_index: int, data: np.ndarray):

@@ -29,9 +29,11 @@ class StatusBar(QStatusBar):
                                                           Qt.AspectRatioMode.KeepAspectRatio,
                                                           Qt.TransformationMode.SmoothTransformation)
         self.lb_state.setPixmap(self.free_pixmap)
+        self.lb_pos = QLabel(self)
 
         self.addWidget(self.lb_progress_status)
         self.addWidget(self.pb_progress)
+        self.addPermanentWidget(self.lb_pos)
         self.addPermanentWidget(self.lb_state)
 
         # 最新更新状态
@@ -70,3 +72,12 @@ class StatusBar(QStatusBar):
         """
         self.working_state = working_state
         self.percent = int(current * 100 / total)
+
+    @Slot(float, float)
+    def update_pos(self, x: float, y: float) -> None:
+        """
+        更新鼠标位置信息
+        :param x: 鼠标x坐标
+        :param y: 鼠标y坐标
+        """
+        self.lb_pos.setText(f'{x:.2f},{y:.2f}')

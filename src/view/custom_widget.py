@@ -1,10 +1,11 @@
 import math
 from typing import Union, List
 
-from PySide6.QtCore import Qt, Signal, QPoint, QRectF, QPropertyAnimation
-from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont, QPen, QLinearGradient
+from PySide6.QtCore import Qt, Signal, QPoint, QRectF, QPropertyAnimation, QPointF
+from PySide6.QtGui import QBrush, QPainter, QPixmap, QMouseEvent, QColor, QFont, QPen, QLinearGradient, QColorConstants
 from PySide6.QtWidgets import (QLabel, QWidget, QHBoxLayout, QListView, QSizePolicy, QSpacerItem, QGraphicsEllipseItem,
-                               QGraphicsItem, QGraphicsLineItem, QGraphicsSimpleTextItem, QGraphicsItemGroup)
+                               QGraphicsItem, QGraphicsLineItem, QGraphicsSimpleTextItem, QGraphicsItemGroup,
+                               QGraphicsRectItem)
 
 from src.model.enums import FrameLabelPos
 from src.model.models import GradientColor
@@ -375,6 +376,7 @@ class ParticleGroup(QGraphicsItemGroup):
         self.addToGroup(self.mark)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsScenePositionChanges, True)
 
     def refresh(self) -> None:
         """
@@ -388,9 +390,21 @@ class ParticleGroup(QGraphicsItemGroup):
         self.addToGroup(self.particle)
         self.addToGroup(self.mark)
 
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            scene = self.scene()
+            if scene:
+                rect = scene.sceneRect()
+                if not rect.contains(value):
+                    value.setX(min(rect.right(), max(value.x(), rect.left())))
+                    value.setY(min(rect.bottom(), max(value.y(), rect.top())))
+                    return value
+        return super().itemChange(change, value)
+
 
 class TrajectoryItem(QGraphicsLineItem):
     max_duration = 1000
+
     def __init__(self, settings: Settings, index: int, x1, y1, x2, y2, frame_interval, pre_speed: float = None):
         """
         轨迹Item（一段）
@@ -525,3 +539,30 @@ class FrameLabelItem(QGraphicsSimpleTextItem):
         else:
             self.setX(width - self.boundingRect().width())
             self.setY(height - self.boundingRect().height())
+
+
+class CropRectItem(QGraphicsRectItem):
+    def __init__(self):
+        super().__init__()
+        pen = QPen()
+        pen.setStyle(Qt.PenStyle.DashLine)
+        pen.setColor(QColorConstants.Green)
+        self.setPen(pen)
+        self.setVisible(False)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            scene = self.scene()
+            if scene:
+                rect = scene.sceneRect()
+                bounding = self.boundingRect()
+                left_top = QPointF(value.x() + bounding.left(), value.y() + bounding.top())
+                right_bottom = QPointF(value.x() + bounding.right(), value.y() + bounding.bottom())
+                if not rect.contains(left_top) or not rect.contains(right_bottom):
+                    value.setX(min(rect.right() - bounding.width(), max(value.x(), rect.left())))
+                    value.setY(min(rect.bottom() - bounding.height(), max(value.y(), rect.top())))
+                    return value
+        return super().itemChange(change, value)

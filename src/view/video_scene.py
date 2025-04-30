@@ -1,6 +1,5 @@
 import os
 from typing import Tuple, List
-import asyncio
 
 import cv2
 import numpy as np
@@ -12,6 +11,7 @@ from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signa
 
 from src.model.qt_models import DataHelper
 from src.model.enums import OperationMode
+from src.view.custom_widget import CropRectItem
 from src.settings.default_settings import SettingKey
 from src.settings.settings import Settings
 from src.util.common_util import split_indexes_text
@@ -23,6 +23,7 @@ class VideoScene(QGraphicsScene):
     sig_export_finish = Signal()
     sig_frame_changed = Signal(int)
     sig_calculate_particle = Signal(int, int)
+    sig_mouse_move = Signal(float, float)
 
     codes_map = {
         '.avi': 'XVID',
@@ -59,26 +60,12 @@ class VideoScene(QGraphicsScene):
         self.frame_label_item = None
 
         # 裁切框
-        self.crop_item: QGraphicsRectItem = self.create_crop_item()
+        self.crop_item: CropRectItem = CropRectItem()
         self.addItem(self.crop_item)
         # 粒子计算完后发出信号，更新状态栏
         self.data_helper.sig_calculate_particle.connect(self.__calculate_particle)
+        self.sceneRectChanged.connect(self.rect_changed)
 
-    @staticmethod
-    def create_crop_item() -> QGraphicsRectItem:
-        """
-        创建裁切边框
-        :return:
-        """
-        item = QGraphicsRectItem()
-        pen = QPen()
-        pen.setStyle(Qt.PenStyle.DashLine)
-        pen.setColor(QColorConstants.Green)
-        item.setPen(pen)
-        item.setVisible(False)
-        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
-        item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
-        return item
 
     @Slot(int, np.ndarray)
     async def add_frame(self, index: int, frame: np.ndarray) -> None:
@@ -291,21 +278,25 @@ class VideoScene(QGraphicsScene):
         鼠标按下事件
         :param event: QGraphicsSceneMouseEvent
         """
-        self.mouse_press_pos = event.scenePos()
+        scene_pos = event.scenePos()
+        self.mouse_press_pos = scene_pos
         if self.mode == OperationMode.ADD:
             # 添加模式
             if self.current_frame_index in self.frames_base64:
-                scene_pos = event.scenePos().toPoint()
+                scene_point = scene_pos.toPoint()
                 index, ok = QInputDialog.getInt(None, '输入', '粒子编号', 1)
                 if ok:
-                    self.data_helper.add_particle(self.current_frame_index, index, (scene_pos.x(), scene_pos.y()))
+                    self.data_helper.add_particle(self.current_frame_index, index, (scene_point.x(), scene_point.y()))
                     self.change_display(self.current_frame_index)
             else:
                 QMessageBox.information(self, '提示', f'未加载视频')
         elif self.mode == OperationMode.CROP:
             # 裁切模式
             if event.buttons() == Qt.MouseButton.LeftButton:
-                self.crop_item.setRect(QRectF(event.scenePos(), event.scenePos()))
+                self.crop_item.setX(scene_pos.x())
+                self.crop_item.setY(scene_pos.y())
+                # self.crop_item.setRect(QRectF(scene_pos, scene_pos))
+                self.crop_item.setRect(QRectF(0, 0, 0, 0))
                 self.crop_item.setVisible(True)
             if event.buttons() == Qt.MouseButton.RightButton:
                 self.crop_item.setRect(QRectF(0, 0, 0, 0))
@@ -338,20 +329,24 @@ class VideoScene(QGraphicsScene):
         鼠标移动事件
         :param event: QGraphicsSceneMouseEvent
         """
+        scene_pos = event.scenePos()
+        self.sig_mouse_move.emit(scene_pos.x(), scene_pos.y())
         if self.mode == OperationMode.CROP:
             # 裁切模式下左键拖拽，绘制裁切框
             if event.buttons() == Qt.MouseButton.LeftButton:
                 # 因导出的时候为避免将裁切边框显示出来，将裁切范围左、上位置缩小了1像素，所以在绘制边框时扩大1像素
-                left = min(self.mouse_press_pos.x(), event.scenePos().x()) - 1
-                right = max(self.mouse_press_pos.x(), event.scenePos().x())
-                top = min(self.mouse_press_pos.y(), event.scenePos().y()) - 1
-                bottom = max(self.mouse_press_pos.y(), event.scenePos().y())
+                left = min(self.mouse_press_pos.x(), scene_pos.x()) - 1
+                right = max(self.mouse_press_pos.x(), scene_pos.x())
+                top = min(self.mouse_press_pos.y(), scene_pos.y()) - 1
+                bottom = max(self.mouse_press_pos.y(), scene_pos.y())
                 # 避免边框超出图片边界
                 top = max(-1.0, top)
                 left = max(-1.0, left)
                 right = min(self.current_frame_item.pixmap().width() * 1.0, right)
                 bottom = min(self.current_frame_item.pixmap().height() * 1.0, bottom)
-                self.crop_item.setRect(QRectF(left, top, right - left, bottom - top))
+                self.crop_item.setX(left)
+                self.crop_item.setY(top)
+                self.crop_item.setRect(QRectF(0, 0, right - left, bottom - top))
         else:
             super(VideoScene, self).mouseMoveEvent(event)
 
@@ -382,10 +377,10 @@ class VideoScene(QGraphicsScene):
         file_name, file_ext = os.path.splitext(file_path)
 
         # 获取图像高、宽，以及需要保存的区域
-        if self.crop_item.rect().width() > 0 and self.crop_item.rect().height() > 0:
+        if self.crop_item and self.crop_item.rect().width() > 0 and self.crop_item.rect().height() > 0:
             img_width = int(self.crop_item.rect().width())
             img_height = int(self.crop_item.rect().height())
-            rect = self.crop_item.rect()
+            rect = self.crop_item.mapRectToScene(self.crop_item.rect())
             source = QRectF(rect.x() + 1, rect.y() + 1, img_width - 1, img_height - 1)
         else:
             img_width = self.current_frame_item.pixmap().width()
@@ -420,3 +415,9 @@ class VideoScene(QGraphicsScene):
         显示设置更新后, 刷新item显示
         """
         self.change_display(self.current_frame_index)
+
+
+    @Slot(QRectF)
+    def rect_changed(self, value):
+        if self.current_frame_item.pixmap().rect():
+            self.setSceneRect(self.current_frame_item.pixmap().rect())
