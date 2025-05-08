@@ -228,14 +228,14 @@
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="lb_adaptive_hist_eq">
+             <widget class="QLabel" name="lb_adaptive_hist_limit">
               <property name="text">
-               <string>均衡化次数</string>
+               <string>CLAHE裁剪阈值</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="spb_adaptive_hist_eq">
+             <widget class="QSpinBox" name="spb_adaptive_hist_limit">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                 <horstretch>0</horstretch>

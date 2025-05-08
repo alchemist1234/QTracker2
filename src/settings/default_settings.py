@@ -35,7 +35,7 @@ class SettingKey(Enum):
     opening_size = SettingItem(section='analyze', key='opening_size', default_value=1)
     closing_size = SettingItem(section='analyze', key='closing_size', default_value=1)
     apply_hist_eq = SettingItem(section='analyze', key='apply_hist_eq', default_value=False)
-    adaptive_hist_eq = SettingItem(section='analyze', key='adaptive_hist_eq', default_value=0)
+    adaptive_hist_limit = SettingItem(section='analyze', key='adaptive_hist_limit', default_value=0)
     bilateral_size = SettingItem(section='analyze', key='bilateral_size', default_value=6)
     bilateral_color = SettingItem(section='analyze', key='bilateral_color', default_value=75)
     bilateral_space = SettingItem(section='analyze', key='bilateral_space', default_value=75)

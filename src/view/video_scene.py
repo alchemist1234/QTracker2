@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox,
-                               QLineEdit, QWidget, QGraphicsRectItem, QGraphicsItem)
-from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPen, QColorConstants, QPainter
+                               QLineEdit, QWidget)
+from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPainter
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
 from src.model.qt_models import DataHelper
@@ -65,7 +65,6 @@ class VideoScene(QGraphicsScene):
         # 粒子计算完后发出信号，更新状态栏
         self.data_helper.sig_calculate_particle.connect(self.__calculate_particle)
         self.sceneRectChanged.connect(self.rect_changed)
-
 
     @Slot(int, np.ndarray)
     async def add_frame(self, index: int, frame: np.ndarray) -> None:
@@ -415,7 +414,6 @@ class VideoScene(QGraphicsScene):
         显示设置更新后, 刷新item显示
         """
         self.change_display(self.current_frame_index)
-
 
     @Slot(QRectF)
     def rect_changed(self, value):

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.1
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -141,19 +141,19 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
-        self.lb_adaptive_hist_eq = QLabel(self.groupBox)
-        self.lb_adaptive_hist_eq.setObjectName(u"lb_adaptive_hist_eq")
+        self.lb_adaptive_hist_limit = QLabel(self.groupBox)
+        self.lb_adaptive_hist_limit.setObjectName(u"lb_adaptive_hist_limit")
 
-        self.horizontalLayout_3.addWidget(self.lb_adaptive_hist_eq)
+        self.horizontalLayout_3.addWidget(self.lb_adaptive_hist_limit)
 
-        self.spb_adaptive_hist_eq = QSpinBox(self.groupBox)
-        self.spb_adaptive_hist_eq.setObjectName(u"spb_adaptive_hist_eq")
-        sizePolicy.setHeightForWidth(self.spb_adaptive_hist_eq.sizePolicy().hasHeightForWidth())
-        self.spb_adaptive_hist_eq.setSizePolicy(sizePolicy)
-        self.spb_adaptive_hist_eq.setFrame(False)
-        self.spb_adaptive_hist_eq.setMaximum(9999)
+        self.spb_adaptive_hist_limit = QSpinBox(self.groupBox)
+        self.spb_adaptive_hist_limit.setObjectName(u"spb_adaptive_hist_limit")
+        sizePolicy.setHeightForWidth(self.spb_adaptive_hist_limit.sizePolicy().hasHeightForWidth())
+        self.spb_adaptive_hist_limit.setSizePolicy(sizePolicy)
+        self.spb_adaptive_hist_limit.setFrame(False)
+        self.spb_adaptive_hist_limit.setMaximum(9999)
 
-        self.horizontalLayout_3.addWidget(self.spb_adaptive_hist_eq)
+        self.horizontalLayout_3.addWidget(self.spb_adaptive_hist_limit)
 
 
         self.verticalLayout2.addLayout(self.horizontalLayout_3)
@@ -631,8 +631,8 @@ class Ui_Dialog(object):
         self.dsb_color_speed_min.setObjectName(u"dsb_color_speed_min")
         palette = QPalette()
         brush = QBrush(QColor(136, 136, 136, 228))
-        brush.setStyle(Qt.SolidPattern)
-        palette.setBrush(QPalette.Disabled, QPalette.Text, brush)
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        palette.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, brush)
         self.dsb_color_speed_min.setPalette(palette)
         self.dsb_color_speed_min.setMaximum(999999.000000000000000)
 
@@ -647,7 +647,7 @@ class Ui_Dialog(object):
         self.dsb_color_speed_max.setObjectName(u"dsb_color_speed_max")
         self.dsb_color_speed_max.setMaximumSize(QSize(16777215, 16777210))
         palette1 = QPalette()
-        palette1.setBrush(QPalette.Disabled, QPalette.Text, brush)
+        palette1.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, brush)
         self.dsb_color_speed_max.setPalette(palette1)
         self.dsb_color_speed_max.setMaximum(999999.000000000000000)
 
@@ -776,7 +776,7 @@ class Ui_Dialog(object):
         self.lb_gaussian_blur.setText(QCoreApplication.translate("Dialog", u"\u9ad8\u65af\u6a21\u7cca", None))
         self.lb_closing_size.setText(QCoreApplication.translate("Dialog", u"\u95ed\u8fd0\u7b97", None))
         self.chb_apply_hist_eq.setText(QCoreApplication.translate("Dialog", u"\u76f4\u65b9\u56fe\u5747\u8861\u5316", None))
-        self.lb_adaptive_hist_eq.setText(QCoreApplication.translate("Dialog", u"\u5747\u8861\u5316\u6b21\u6570", None))
+        self.lb_adaptive_hist_limit.setText(QCoreApplication.translate("Dialog", u"CLAHE\u88c1\u526a\u9608\u503c", None))
         self.lb_bilateral_filter.setText(QCoreApplication.translate("Dialog", u"\u53cc\u8fb9\u6ee4\u6ce2(size/color/space)", None))
         self.groupBox_2.setTitle("")
         self.lb_search_radius.setText(QCoreApplication.translate("Dialog", u"\u641c\u7d22\u534a\u5f84", None))

@@ -20,7 +20,7 @@ class VideoLoader(QObject):
     sig_first_frame_finished = Signal(int)
     sig_all_frame_finished = Signal()
 
-    def __init__(self, settings:Settings, parent=None):
+    def __init__(self, settings: Settings, parent=None):
         super(VideoLoader, self).__init__(parent)
         self.settings = settings
 
@@ -160,7 +160,6 @@ class Analyzer(QObject):
         """
         self.data_queue.append((frame_index, frame))
 
-
     def all_data_received(self):
         """
         所有视频帧已接收完成
@@ -180,22 +179,20 @@ class Analyzer(QObject):
         contours, hierarchy = cv2.findContours(binary.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         m_list, cnt_list = self.get_contours(contours)
 
-        ordered_centers = -1 * np.ones((0, 2, 1))
-
-        for (mind, m) in enumerate(m_list):
-            center = self.get_contour_info(m)
-            new_row = -1 * np.ones((1, 2, ordered_centers.shape[2]))
-            new_row[0, :, 0] = center
-            ordered_centers = np.append(ordered_centers, new_row, axis=0)
+        ordered_centers = [self.get_contour_info(m) for m in m_list]
 
         memory_frames = self.settings.int_value(SettingKey.memory_frames)
+        search_radius = self.settings.int_value(SettingKey.search_radius)
+
+        x = 0
         try:
-            for center in ordered_centers:
-                center_tuple = tuple(np.ravel(center).astype(int))
+            for center_tuple in ordered_centers:
                 for index, history_center in self.history_particles.items():
+                    x += 1
                     if frame_index - history_center.frame_index <= memory_frames and \
-                            self.same_particle(history_center.center, center_tuple):
-                        self.history_particles[index] = HistoryParticle(frame_index=frame_index, center=center_tuple)
+                            self.same_particle(history_center.center, center_tuple, search_radius):
+                        history_center.frame_index = frame_index
+                        history_center.center = center_tuple
                         frame_particles[index] = center_tuple
                         break
                 else:
@@ -207,42 +204,54 @@ class Analyzer(QObject):
             pass
         return frame_particles
 
-    def same_particle(self, old_center, new_center) -> bool:
+    @staticmethod
+    def same_particle(old_center: Tuple[int, int], new_center: Tuple[int, int], dis: int) -> bool:
         """
         判断两个粒子是否为同一个
         :param old_center: 原位置
         :param new_center: 新位置
+        :param dis: 判断范围
         :return: 是否同一粒子
         """
-        dis = self.settings.int_value(SettingKey.memory_frames)
         return abs(new_center[0] - old_center[0]) <= dis and abs(new_center[1] - old_center[1]) <= dis
 
     def smooth(self, frame):
+        """
+        图像平滑
+        :param frame: 图像帧
+        :return: 平滑后图像, 灰度图像
+        """
         if len(frame.shape) == 3:
             image_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
             image_gray = frame
-
+        # 直方图均衡化
         if self.settings.boolean_value(SettingKey.apply_hist_eq):
             image_gray = cv2.equalizeHist(image_gray)
-
-        for j in range(self.settings.int_value(SettingKey.adaptive_hist_eq)):
-            clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(8, 8))
-            image_gray = clahe.apply(image_gray)
-
+        # 自适应直方图均衡化
+        adaptive_hist_limit = self.settings.int_value(SettingKey.adaptive_hist_limit)
+        clahe = cv2.createCLAHE(clipLimit=adaptive_hist_limit, tileGridSize=(8, 8))
+        image_gray = clahe.apply(image_gray)
+        # 双边滤波
         bilateral_size = self.settings.int_value(SettingKey.bilateral_size)
         bilateral_color = self.settings.int_value(SettingKey.bilateral_color)
         bilateral_space = self.settings.int_value(SettingKey.bilateral_space)
         if bilateral_size != 0:
             image_gray = cv2.bilateralFilter(image_gray, bilateral_size, bilateral_color, bilateral_space)
-
+        # 中值模糊
         image_gray = cv2.medianBlur(image_gray, self.settings.int_value(SettingKey.median_blur))
+        # 高斯模糊
         image_gray = cv2.GaussianBlur(image_gray, (self.settings.int_value(SettingKey.gaussian_blur),) * 2, 0)
         frame = image_gray.copy()
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
         return frame, image_gray
 
     def binary(self, image):
+        """
+        二值化
+        :param image: 图像帧
+        :return: 二值化后图像
+        """
         derivative_order = self.settings.int_value(SettingKey.derivative_order)
         sobel_x = self.get_sobel(image, derivative_order, 0)
         sobel_y = self.get_sobel(image, 0, derivative_order)
@@ -269,18 +278,23 @@ class Analyzer(QObject):
     def get_contours(self, contours):
         m_list = []
         cnt_list = []
+        max_area = self.settings.int_value(SettingKey.maximum_area_for_detection)
+        min_area = self.settings.int_value(SettingKey.minimum_area_for_detection)
+        split_radius = self.settings.int_value(SettingKey.split_radius)
+        split_area = (split_radius * 1.05) ** 2 * np.pi
+        split = self.settings.boolean_value(SettingKey.split_circular_particles)
+
         for cnt_index in range(len(contours)):
             cnt = contours[cnt_index]
-            judgement, moment = self.particle_test(cnt)
+            judgement, moment = self.particle_test(cnt, min_area, max_area, split, split_area)
 
             if judgement == Analyzer.Judgement.TRUE.value:
                 m_list.append(moment)
                 cnt_list.append(cnt)
         return m_list, cnt_list
 
-    def particle_test(self, contours):
-        max_area = self.settings.int_value(SettingKey.maximum_area_for_detection)
-        min_area = self.settings.int_value(SettingKey.minimum_area_for_detection)
+    @staticmethod
+    def particle_test(contours, min_area: int, max_area: int, split: bool, split_area: float | None):
         moments = cv2.moments(contours)
         area = moments['m00']
 
@@ -288,9 +302,8 @@ class Analyzer(QObject):
         if min_area < area <= max_area:
             judgement = Analyzer.Judgement.TRUE.value
 
-        if self.settings.boolean_value(SettingKey.split_circular_particles):
-            r_approx = np.sqrt(area / np.pi)
-            is_touching = self.settings.int_value(SettingKey.split_radius) * 1.05 <= r_approx
+        if split:
+            is_touching = split_area <= area
             if is_touching:
                 judgement = judgement | 0b_10
         return judgement, moments
@@ -300,8 +313,7 @@ class Analyzer(QObject):
         area = m['m00']
         cx = int(round(m['m10'] / area))
         cy = int(round(m['m01'] / area))
-        center = np.array([cx, cy])
-        return center
+        return cx, cy
 
     @staticmethod
     def split_particles_roi(radius, cnt):

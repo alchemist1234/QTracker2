@@ -326,7 +326,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def analyze_result(self) -> None:
         """
-        分析粒子动动结果
+        分析粒子运动结果
         """
         if self.file_path:
             if not self.confirm('该操作会清除所有计算数据, 是否继续'):
