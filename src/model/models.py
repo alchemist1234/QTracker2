@@ -55,26 +55,12 @@ class AnalyzeResult:
         return 0 if self.duration == 0 else self.distance / self.duration
 
     def data(self, index: int):
-        if index == 0:
-            return self.frame
-        elif index == 1:
-            return self.duration
-        elif index == 2:
-            return float(self.x_px)
-        elif index == 3:
-            return float(self.y_px)
-        elif index == 4:
-            return float(self.x_micro)
-        elif index == 5:
-            return float(self.y_micro)
-        elif index == 6:
-            return float(self.distance)
-        elif index == 7:
-            return float(self.velocity)
-        elif index == 8:
-            return float(self.angle)
-        else:
+        if not 0 <= index <= 8:
             return None
+        values = (self.frame, self.duration, float(self.x_px), float(self.y_px),
+                  float(self.x_micro), float(self.y_micro),
+                  float(self.distance), float(self.velocity), float(self.angle))
+        return values[index]
 
 
 @dataclass

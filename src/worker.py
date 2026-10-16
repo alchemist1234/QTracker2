@@ -1,6 +1,9 @@
 from enum import Enum
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, Optional, Deque
+import threading
 import time
+import traceback
+from collections import deque
 
 import numpy as np
 from PySide6.QtCore import QObject, Signal, Slot
@@ -23,6 +26,16 @@ class VideoLoader(QObject):
     def __init__(self, settings: Settings, parent=None):
         super(VideoLoader, self).__init__(parent)
         self.settings = settings
+        # 是否允许继续加载, load()开始时置True, stop()置False
+        self.running = True
+        # 关联的分析器, 分析积压时暂停解码(背压), 见load()
+        self.analyzer: Optional["Analyzer"] = None
+
+    def stop(self) -> None:
+        """
+        请求停止当前视频加载, load()循环在下次检查时退出
+        """
+        self.running = False
 
     @Slot(str)
     def load(self, path: str) -> None:
@@ -30,49 +43,71 @@ class VideoLoader(QObject):
         加载视频文件
         :param path: 视频文件地址
         """
+        # 新一轮加载开始
+        self.running = True
         start_frame = self.settings.int_value(SettingKey.start_frame)
         stop_frame = self.settings.int_value(SettingKey.stop_frame)
 
         video = cv2.VideoCapture(path)
-        # get meta info
-        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = int(video.get(cv2.CAP_PROP_FPS))
-        frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-        if start_frame > frame_count:
-            start_frame = 1
-        stop_frame = min(stop_frame, frame_count)
-        if 0 < start_frame <= stop_frame and stop_frame > 0:
-            frame_count = min(stop_frame - start_frame + 1, frame_count)
-        meta_info = VideoMetaInfo(width, height, fps, frame_count)
-        self.sig_meta_info_updated.emit(meta_info)
+        # 中途被stop()停止时不发送sig_all_frame_finished, 避免干扰新一轮分析
+        stopped = False
+        try:
+            # get meta info
+            width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = int(video.get(cv2.CAP_PROP_FPS))
+            frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+            if start_frame > frame_count:
+                start_frame = 1
+            stop_frame = min(stop_frame, frame_count)
+            if 0 < start_frame <= stop_frame and stop_frame > 0:
+                frame_count = min(stop_frame - start_frame + 1, frame_count)
+            meta_info = VideoMetaInfo(width, height, fps, frame_count)
+            self.sig_meta_info_updated.emit(meta_info)
 
-        skips = 0
+            skips = 0
 
-        if video.isOpened():
-            index = 0
-            while True:
-                ret, frame = video.read()
-                if not ret:
-                    if index != frame_count:
-                        # 如果读取的帧数与元数据帧数不一样，重新发送meta_info_updated信号
-                        meta_info.frame_count = index
-                        self.sig_meta_info_updated.emit(meta_info)
-                    self.sig_all_frame_finished.emit()
-                    break
-                if skips < start_frame - 1:
-                    skips += 1
-                    continue
+            if video.isOpened():
+                index = 0
+                while True:
+                    if not self.running:
+                        stopped = True
+                        break
+                    # 分析积压时暂停解码, 防止原始帧数据无限占用内存
+                    while self.running and self.analyzer is not None and self.analyzer.pending_full():
+                        time.sleep(0.01)
+                    if not self.running:
+                        stopped = True
+                        break
+                    ret, frame = video.read()
+                    if not ret:
+                        if index != frame_count:
+                            # 如果读取的帧数与元数据帧数不一样，重新发送meta_info_updated信号
+                            meta_info.frame_count = index
+                            self.sig_meta_info_updated.emit(meta_info)
+                        break
+                    if skips < start_frame - 1:
+                        skips += 1
+                        continue
 
-                index += 1
+                    index += 1
 
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                self.sig_frame_finished.emit(index, frame)
-                # if index == 1:
-                #     self.sig_first_frame_finished.emit(1)
-                if index == frame_count:
-                    self.sig_all_frame_finished.emit()
-                    break
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    if not self.running:
+                        # 发送前再检查一次, 减少停止后残留帧混入新一轮分析
+                        stopped = True
+                        break
+                    self.sig_frame_finished.emit(index, frame)
+                    if index == frame_count:
+                        break
+        except Exception:
+            traceback.print_exc()
+        finally:
+            # 及时释放视频句柄, 避免文件句柄泄漏/文件被占用
+            video.release()
+        if not stopped:
+            # 视频自然读完(或打开失败)才通知分析器数据发送完毕
+            self.sig_all_frame_finished.emit()
 
 
 class Analyzer(QObject):
@@ -80,6 +115,8 @@ class Analyzer(QObject):
     视频分析器
     """
     sig_frame_analyzed = Signal(int, list)
+    # 待分析帧数上限: 解码快于分析时让解码端等待, 防止原始帧数据无限积压
+    MAX_PENDING = 8
 
     class Judgement(Enum):
         FALSE = 0b_00
@@ -94,8 +131,9 @@ class Analyzer(QObject):
         self.max_label = 0
 
         # 待分析视频帧数据
-        # [(frame_index, ndarray)]
-        self.data_queue: List[Tuple[int, np.ndarray]] = []
+        # (frame_index, ndarray), 主线程写入、分析线程消费, 由_cond保护
+        self.data_queue: Deque[Tuple[int, np.ndarray]] = deque()
+        self._cond = threading.Condition()
         # 是否正在分析
         self.working = False
         # 当前视频所有帧是否已全部发送到self.data_queue
@@ -112,27 +150,38 @@ class Analyzer(QObject):
             if not self.working:
                 # 停止任务时结束循环
                 break
-            if not self.receiving and len(self.data_queue) == 0:
-                # 分析完成时结束循环
-                break
-            # 本次循环是否有任务进行，没有则等待0.5s后进入下一循环，避免死循环频率过高占用CPU
-            work = False
-            if len(self.data_queue) > 0:
-                work = True
-                data = self.data_queue.pop(0)
+            data = None
+            with self._cond:
+                # 在锁内取帧, 避免与stop()的clear()并发导致IndexError
+                if len(self.data_queue) > 0:
+                    data = self.data_queue.popleft()
+            if data is not None:
                 frame_index, frame = data
                 particle_pos = self.analyze(frame_index, frame)
                 if self.working and particle_pos is not None:
                     # 发送帧分析完成信号
                     self.sig_frame_analyzed.emit(frame_index, list(particle_pos.items()))
-            if not work:
-                time.sleep(0.5)
+                continue
+            if not self.receiving:
+                # 数据全部接收且队列已分析完, 结束循环
+                break
+            with self._cond:
+                # 条件变量等待新数据, 由add_data/all_data_received/stop唤醒,
+                # 替代固定sleep轮询, 消除每帧最多0.5s的额外延迟; 超时兜底防止信号丢失时卡死
+                if self.working and self.receiving and len(self.data_queue) == 0:
+                    self._cond.wait(0.5)
         self.running = False
 
     def start_and_run(self) -> None:
         """
         开始分析视频
         """
+        # 清理上一轮停止时可能残留的帧数据与历史粒子
+        with self._cond:
+            self.data_queue.clear()
+            self.history_particles.clear()
+            self.max_label = 0
+            self._cond.notify_all()
         self.working = True
         self.receiving = True
         if not self.running:
@@ -146,11 +195,14 @@ class Analyzer(QObject):
         3. 清除历史数据
         4. 最大粒子ID重置为0
         """
-        self.working = False
-        self.receiving = False
-        self.data_queue.clear()
-        self.history_particles.clear()
-        self.max_label = 0
+        with self._cond:
+            self.working = False
+            self.receiving = False
+            self.data_queue.clear()
+            self.history_particles.clear()
+            self.max_label = 0
+            # 唤醒可能在等待数据的分析循环
+            self._cond.notify_all()
 
     def add_data(self, frame_index: int, frame: np.ndarray) -> None:
         """
@@ -158,13 +210,23 @@ class Analyzer(QObject):
         :param frame_index: 视频帧ID
         :param frame: 视频帧数据
         """
-        self.data_queue.append((frame_index, frame))
+        with self._cond:
+            self.data_queue.append((frame_index, frame))
+            self._cond.notify()
 
     def all_data_received(self):
         """
         所有视频帧已接收完成
         """
-        self.receiving = False
+        with self._cond:
+            self.receiving = False
+            self._cond.notify()
+
+    def pending_full(self) -> bool:
+        """
+        待分析数据是否达到上限
+        """
+        return len(self.data_queue) >= self.MAX_PENDING
 
     def analyze(self, frame_index: int, frame: np.ndarray) -> Dict[int, Tuple[int, int]]:
         """
@@ -184,11 +246,14 @@ class Analyzer(QObject):
         memory_frames = self.settings.int_value(SettingKey.memory_frames)
         search_radius = self.settings.int_value(SettingKey.search_radius)
 
-        x = 0
         try:
+            # 裁剪超出记忆帧数的历史粒子, 它们在匹配时已不可能再被命中;
+            # 旧写法从不清理, 历史数据随视频长度无限增长, 每帧匹配开销越来越大
+            self.history_particles = {index: hp for index, hp in self.history_particles.items()
+                                      if frame_index - hp.frame_index <= memory_frames}
             for center_tuple in ordered_centers:
-                for index, history_center in self.history_particles.items():
-                    x += 1
+                # 用快照遍历, 防止stop()在其它线程清空历史数据导致遍历失败
+                for index, history_center in list(self.history_particles.items()):
                     if frame_index - history_center.frame_index <= memory_frames and \
                             self.same_particle(history_center.center, center_tuple, search_radius):
                         history_center.frame_index = frame_index
@@ -199,9 +264,12 @@ class Analyzer(QObject):
                     frame_particles[self.max_label] = center_tuple
                     self.history_particles[self.max_label] = HistoryParticle(frame_index, center_tuple)
                     self.max_label += 1
-        except Exception as e:
-            # 防止分析过程中重新加载视频，self.history_particles被清空，遍历时报错导致线程退出后无法再次分析
+        except RuntimeError:
+            # 停止/重新加载视频时历史数据在其它线程被清空导致的遍历中断, 属正常停止场景
             pass
+        except Exception:
+            # 防止分析过程中重新加载视频，self.history_particles被清空，遍历时报错导致线程退出后无法再次分析
+            traceback.print_exc()
         return frame_particles
 
     @staticmethod

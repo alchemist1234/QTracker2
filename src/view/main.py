@@ -1,5 +1,4 @@
 import os
-import asyncio
 
 import numpy as np
 from PySide6.QtWidgets import *
@@ -63,6 +62,8 @@ class MainWindow(QMainWindow):
         self.analyzer_thread = QThread()
         self.analyzer = Analyzer(settings)
         self.analyzer.moveToThread(self.analyzer_thread)
+        # 加载器在分析积压时暂停解码(背压), 防止原始帧数据无限积压
+        self.video_loader.analyzer = self.analyzer
 
         self.play_timer = QTimer(self)
         self.playing = False
@@ -111,7 +112,7 @@ class MainWindow(QMainWindow):
         self.sig_start_load.connect(self.video_loader.load)
         self.sig_start_analyze.connect(self.analyzer.start_and_run)
         self.video_loader.sig_meta_info_updated.connect(self.video_meta_updated)
-        self.video_loader.sig_frame_finished.connect(lambda index, frame: asyncio.ensure_future(self.scene.add_frame(index, frame)))
+        self.video_loader.sig_frame_finished.connect(self.scene.add_frame)
         self.video_loader.sig_frame_finished.connect(self.analyze_data)
         self.video_loader.sig_frame_finished.connect(self.update_loading_progress)
         # self.video_loader.sig_first_frame_finished.connect(self.scene.change_display)
@@ -141,9 +142,10 @@ class MainWindow(QMainWindow):
         self.scene.sig_export_frame.connect(lambda frame: self.waiting_dialog.setValue(frame))
         self.scene.sig_export_frame.connect(self.update_export_progress)
         self.scene.sig_export_finish.connect(self.export_finished)
+        self.scene.sig_export_error.connect(self.export_error)
         self.scene.sig_frame_changed.connect(self.update_lcd_value)
         self.scene.sig_frame_changed.connect(self.update_slider_value)
-        self.scene.sig_calculate_particle.connect(self.update_analyzing_progress)
+        self.scene.sig_calculate_particle.connect(self.update_calculate_progress)
         self.scene.sig_mouse_move.connect(self.status_bar.update_pos)
 
     @Slot(int, np.ndarray)
@@ -192,6 +194,8 @@ class MainWindow(QMainWindow):
         :param path: 视频文件路径, 用于向sig_start_load信号传递参数
         """
         if path:
+            # 先停止旧视频加载, 避免旧视频帧混入新一轮分析
+            self.video_loader.stop()
             self.analyzer.stop()
             self.scene.clear_data()
             self.sig_start_analyze.emit()
@@ -288,6 +292,14 @@ class MainWindow(QMainWindow):
             return
         file_path = os.path.join(file_dir, file_name)
         if len(file_path) > 0:
+            # 导出前置校验, 避免进入等待弹窗后才失败
+            file_ext = os.path.splitext(file_name)[1].lower()
+            if file_ext not in VideoScene.codes_map:
+                QMessageBox.warning(self, '导出失败', f'不支持的视频格式: {file_ext}')
+                return
+            if not self.scene.sorted_frame_indexes():
+                QMessageBox.information(self, '提示', '没有可导出的视频帧')
+                return
             self.waiting_dialog = QProgressDialog(self)
             self.waiting_dialog.setAutoClose(False)
             self.waiting_dialog.setWindowTitle('请稍候')
@@ -313,6 +325,14 @@ class MainWindow(QMainWindow):
         视频导出完成
         """
         self.waiting_dialog.setLabelText('导出完成')
+        self.waiting_dialog.setCancelButton(QPushButton('关闭'))
+
+    def export_error(self, message: str) -> None:
+        """
+        视频导出失败
+        :param message: 失败原因
+        """
+        self.waiting_dialog.setLabelText(f'导出失败: {message}')
         self.waiting_dialog.setCancelButton(QPushButton('关闭'))
 
     @Slot(bool)
@@ -393,6 +413,8 @@ class MainWindow(QMainWindow):
         """
         # 停止子线程
         self.analyzer.stop()
+        # 停止视频加载, 否则quit()需等待整段视频读完, 关闭界面会卡死
+        self.video_loader.stop()
         # 等待子线程退出
         self.video_loader_thread.quit()
         self.video_loader_thread.wait()

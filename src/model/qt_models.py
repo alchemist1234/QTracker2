@@ -1,3 +1,4 @@
+import heapq
 import math
 from typing import Tuple, Dict, List, Collection, Optional, Union
 
@@ -40,6 +41,7 @@ class ParticlePositions(QObject):
         for particle_id in ids:
             res[particle_id] = self.__analyze_particle_data(fps, scale, particle_id)
             # 分析完一个粒子后将信号发出，以更新状态栏
+            i += 1
             self.sig_calculate_particle.emit(i, len(ids))
         return res
 
@@ -52,7 +54,7 @@ class ParticlePositions(QObject):
         :param particle_id: 粒子ID
         :return: List[AnalyzeResult]
         """
-        frame_pos = self.particles.get(particle_id)
+        frame_pos = self.particles.get(particle_id, {})
         if len(frame_pos) == 0:
             return []
         sorted_frame = list(frame_pos.keys())
@@ -124,8 +126,9 @@ class ParticlePositions(QObject):
         移除一帧所有粒子
         :param frame_index: 帧ID
         """
-        self.particles = {particle_id: {frame: pos for frame, pos in frame_pos_dict.items() if frame != frame_index}
-                          for particle_id, frame_pos_dict in self.particles.items()}
+        for frame_pos_dict in self.particles.values():
+            # 原地删除单帧, 避免每次调用重建全部粒子字典(分析期间逐帧调用的热路径)
+            frame_pos_dict.pop(frame_index, None)
 
     def add_frame_particles(self, frame_index: int, particles: Dict[int, Tuple[int, int]]) -> None:
         """
@@ -180,31 +183,33 @@ class ParticlePositions(QObject):
         if not particle_ids:
             # particle_ids为None时返回所有粒子
             particle_ids = set()
-        # 过滤出粒子在目标帧所在的位置, value可能为{}
-        # {粒子ID: {目标帧ID: 粒子位置}, ...}
-        particles = {particle_id: {frame: pos for frame, pos in frame_pos_dict.items()
-                                   if frame == frame_index}
-                     for particle_id, frame_pos_dict in self.particles.items()
-                     if particle_id in particle_ids or not particle_ids}
-        # 将结果转换成{粒子ID: 粒子位置, ...}，并过滤掉在该帧没有数据的粒子
-        return {particle_id: frame_pos_dict[frame_index] for particle_id, frame_pos_dict in particles.items()
-                if len(frame_pos_dict) > 0}
+        # 直接取目标帧位置, 避免遍历每个粒子的全部历史帧(进度条拖动的热路径)
+        return {particle_id: frame_pos_dict[frame_index]
+                for particle_id, frame_pos_dict in self.particles.items()
+                if frame_index in frame_pos_dict and len(frame_pos_dict[frame_index]) > 0
+                and (particle_id in particle_ids or not particle_ids)}
 
     def get_particles_before_frame(self, frame_index: int, particle_ids: Collection[int] = None) \
             -> Dict[int, List[Tuple[int, int, int]]]:
         """
-        获取一帧之前（含当前帧）所有粒子有序点位，用于计算粒子轨迹
+        获取一帧之前（含当前帧）每个粒子最近的至多3个有序点位，用于计算粒子轨迹
         :param frame_index: 帧ID
         :param particle_ids: 需要过滤的粒子ID, 默认不过滤
-        :return: 粒子历史位置 {粒子ID: [{frame: (x1, y1)} , {frame: (x2, y2)}, ...]}
+        :return: 粒子最近位置 {粒子ID: [(x, y, frame), ...]}, 按帧升序, 最多3个点
         """
         if not particle_ids:
             particle_ids = set()
-        return {particle_id: [(frame_pos_dict[frame][0], frame_pos_dict[frame][1], frame)
-                              for frame in sorted(frame_pos_dict.keys()) if frame <= frame_index]
-                for particle_id, frame_pos_dict in self.particles.items()
-                if frame_index in frame_pos_dict and len(frame_pos_dict[frame_index]) > 0
-                and (particle_id in particle_ids or not particle_ids)}
+        result = {}
+        for particle_id, frame_pos_dict in self.particles.items():
+            if frame_index not in frame_pos_dict or len(frame_pos_dict[frame_index]) == 0:
+                continue
+            if particle_ids and particle_id not in particle_ids:
+                continue
+            # 轨迹只需要最近3个点位, nlargest免去对全部历史帧排序
+            recent_frames = heapq.nlargest(3, (f for f in frame_pos_dict.keys() if f <= frame_index))
+            recent_frames.reverse()
+            result[particle_id] = [(frame_pos_dict[f][0], frame_pos_dict[f][1], f) for f in recent_frames]
+        return result
 
     def clear(self):
         self.particles.clear()
@@ -421,7 +426,7 @@ class DataHelper(QObject):
         :return: 粒子Item对象列表
         """
         if frame_index in self.particle_group:
-            filtered_particles = self.settings.list_value(SettingKey.index_filter)
+            filtered_particles = set(self.settings.list_value(SettingKey.index_filter))
             return [item for particle_id, item in self.particle_group[frame_index].items()
                     if particle_id in filtered_particles or not filtered_particles]
         return []
@@ -435,7 +440,7 @@ class DataHelper(QObject):
         # 如果没有粒子，不显示轨迹
         if frame_index not in self.particle_group:
             return []
-        filtered_particles = self.settings.list_value(SettingKey.index_filter)
+        filtered_particles = set(self.settings.list_value(SettingKey.index_filter))
         return [item for f_index, item_dict in self.trajectory_items.items() if f_index <= frame_index
                 for particle_id, item in item_dict.items()
                 if particle_id in filtered_particles or not filtered_particles]

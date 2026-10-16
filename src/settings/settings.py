@@ -79,7 +79,19 @@ class Settings(object):
         :return: 类型配置值
         """
         item: SettingItem = key.value
-        return self.settings.value(f'{item.section}/{item.key}', item.default_value)
+        default = item.default_value
+        try:
+            value = self.settings.value(f'{item.section}/{item.key}', default)
+        except (RuntimeError, TypeError, ValueError):
+            # PySide跨版本反序列化失败时会抛异常, 回退默认值避免启动崩溃
+            return default
+        # 反序列化失败时会得到None或含None的列表, 回退默认值
+        if value is None:
+            return default
+        if isinstance(value, list):
+            cleaned = [v for v in value if v is not None]
+            return cleaned if cleaned else default
+        return value
 
     def set_value(self, key: SettingKey, value: Any) -> None:
         """

@@ -12,20 +12,22 @@ def random_color() -> QColor:
     使用HSL可以通过参数调节颜色的明度范围，排除掉一些过深或过浅的颜色
     :return: QColor
     """
-    return QColor.fromHsl(int(QRandomGenerator.global_().bounded(360) % 360),
-                          int(QRandomGenerator.global_().bounded(256) % 256),
-                          int(QRandomGenerator.global_().bounded(256) % 256))
+    # 饱和度与亮度限制在中间范围, 排除掉一些过深或过浅的颜色
+    hue = int(QRandomGenerator.global_().bounded(360))
+    saturation = 128 + int(QRandomGenerator.global_().bounded(128))
+    lightness = 80 + int(QRandomGenerator.global_().bounded(120))
+    return QColor.fromHsl(hue, saturation, lightness)
 
 
 def split_indexes_text(text: str) -> Set[int]:
     """
     将索引字符串分割成索引集合
-    ','和' '为分隔符
+    ','、空白字符(空格/制表符/换行)为分隔符
     索引支持'-'连续选择
     :param text: 索引字符串
     :return: 索引集合
     """
-    arr = re.split('[, ]', text)
+    arr = re.split(r'[, \t\r\n]+', text)
     indexes = set()
     for i in arr:
         pos = i.find('-')
@@ -49,19 +51,12 @@ def angle_to_y(x1, y1, x2, y2) -> float:
     """
     dx = x2 - x1
     dy = y2 - y1
-    if dy == 0:
-        return 0 if dx == 0 else 90 if dx > 0 else 270
-    arc = math.atan(dx / dy)
-    angle = math.degrees(arc)
-    if dy < 0:
-        angle += 180
-    if angle < 0:
-        angle += 360
-    return angle
+    # atan2覆盖全部象限与零向量, 免去逐象限特判
+    return math.degrees(math.atan2(dx, dy)) % 360
 
 
 def distance(x1, y1, x2, y2) -> float:
     """
     计算两点直线距离
     """
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    return math.hypot(x2 - x1, y2 - y1)

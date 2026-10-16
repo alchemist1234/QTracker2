@@ -1,11 +1,12 @@
 import os
+import traceback
 from typing import Tuple, List
 
 import cv2
 import numpy as np
 
 from PySide6.QtWidgets import (QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneMouseEvent, QInputDialog, QMessageBox,
-                               QLineEdit, QWidget)
+                               QLineEdit, QWidget, QApplication)
 from PySide6.QtGui import QPixmap, QImage, QKeyEvent, QPainter
 from PySide6.QtCore import Slot, QByteArray, QBuffer, QPointF, Qt, QRectF, Signal
 
@@ -21,6 +22,7 @@ class VideoScene(QGraphicsScene):
     sig_export_start = Signal(int)
     sig_export_frame = Signal(int)
     sig_export_finish = Signal()
+    sig_export_error = Signal(str)
     sig_frame_changed = Signal(int)
     sig_calculate_particle = Signal(int, int)
     sig_mouse_move = Signal(float, float)
@@ -39,8 +41,8 @@ class VideoScene(QGraphicsScene):
         self.settings = settings
         # 当前操作模式
         self.mode = OperationMode.MOVE
-        # 用base64存储图像数据，用QImage或者QPixmap存储内存占用过大
-        self.frames_base64 = {}
+        # 用JPEG字节缓存图像帧，用QImage或者QPixmap存储内存占用过大
+        self.frame_cache = {}
         # GraphicItem存储容器
         self.data_helper = DataHelper(self.settings)
         # 当前添加到QGraphicsScene中的粒子Item
@@ -67,7 +69,7 @@ class VideoScene(QGraphicsScene):
         self.sceneRectChanged.connect(self.rect_changed)
 
     @Slot(int, np.ndarray)
-    async def add_frame(self, index: int, frame: np.ndarray) -> None:
+    def add_frame(self, index: int, frame: np.ndarray) -> None:
         """
         添加帧图像
         :param index: 帧ID
@@ -75,7 +77,7 @@ class VideoScene(QGraphicsScene):
         """
         h, w, c = frame.shape
         img = QImage(frame.data, w, h, QImage.Format.Format_RGB888)
-        await self.save_frame_base64(index, img)
+        self.cache_frame(index, img)
 
     @Slot(int)
     def change_display(self, index: int) -> None:
@@ -94,7 +96,7 @@ class VideoScene(QGraphicsScene):
         切换到下一帧
         """
         next_frame = self.current_frame_index + 1
-        if next_frame not in self.frames_base64:
+        if next_frame not in self.frame_cache:
             next_frame = 0
         self.change_display(next_frame)
 
@@ -103,7 +105,7 @@ class VideoScene(QGraphicsScene):
         当前所有帧号(顺序)
         :return: 有序帧号
         """
-        frame_indexes = list(self.frames_base64.keys())
+        frame_indexes = list(self.frame_cache.keys())
         frame_indexes.sort()
         return frame_indexes
 
@@ -113,11 +115,10 @@ class VideoScene(QGraphicsScene):
         :param frame_index: 帧ID
         """
         width, height = 0, 0
-        if frame_index in self.frames_base64:
-            base64 = self.frames_base64[frame_index]
-            byte_arr = QByteArray(base64)
+        if frame_index in self.frame_cache:
             img = QImage()
-            img.loadFromData(QByteArray.fromBase64(byte_arr))
+            # 直接加载缓存的JPEG字节
+            img.loadFromData(self.frame_cache[frame_index])
             pixmap = QPixmap.fromImage(img)
             width, height = pixmap.width(), pixmap.height()
             self.current_frame_item.setPixmap(pixmap)
@@ -225,19 +226,20 @@ class VideoScene(QGraphicsScene):
         self.settings.set_value(SettingKey.show_frame_label, show)
         self.change_display(self.current_frame_index)
 
-    async def save_frame_base64(self, index: int, img: QImage):
+    def cache_frame(self, index: int, img: QImage):
         """
-        QImage 转 Base64
+        JPEG压缩并缓存帧图像
         :param index: 帧号
         :param img: QImage
-        :return: Base64 bytes
         """
-        # quality = self.settings.int_value(default_settings.frame_quality)
+        # 质量从设置读取, 质量100的JPEG比默认80内存占用高约30%
+        quality = max(0, min(100, self.settings.int_value(SettingKey.frame_quality)))
         byte_arr = QByteArray()
         buffer = QBuffer(byte_arr)
         buffer.open(QBuffer.OpenModeFlag.WriteOnly)
-        img.save(buffer, 'jpg', 100)
-        self.frames_base64[index] = byte_arr.toBase64().data()
+        img.save(buffer, 'jpg', quality)
+        # 存原始JPEG字节, 切帧时直接loadFromData, 省去base64解码与33%的额外内存
+        self.frame_cache[index] = byte_arr.data()
         if index == 1:
             self.change_display(1)
 
@@ -249,8 +251,7 @@ class VideoScene(QGraphicsScene):
         # 通过切换帧到-1来清除Scene上的所有Item，避免把一些固有对象(比如图像Item和裁切Item)清除
         self.change_display(-1)
         self.data_helper.clear()
-        self.frames_base64.clear()
-        self.data_helper.clear()
+        self.frame_cache.clear()
         self.particle_items.clear()
         self.trajectory_items.clear()
         self.frame_label_item = None
@@ -281,7 +282,7 @@ class VideoScene(QGraphicsScene):
         self.mouse_press_pos = scene_pos
         if self.mode == OperationMode.ADD:
             # 添加模式
-            if self.current_frame_index in self.frames_base64:
+            if self.current_frame_index in self.frame_cache:
                 scene_point = scene_pos.toPoint()
                 index, ok = QInputDialog.getInt(None, '输入', '粒子编号', 1)
                 if ok:
@@ -367,13 +368,19 @@ class VideoScene(QGraphicsScene):
     def export(self, file_path: str, fps: int) -> None:
         """
         视频导出，支持裁切
-        TODO 异常处理
         :param file_path: 导出文件位置
         :param fps: 帧率
         """
         indexes = self.sorted_frame_indexes()
-        self.sig_export_start.emit(indexes[-1])
+        if len(indexes) == 0:
+            self.sig_export_error.emit('没有可导出的视频帧')
+            return
         file_name, file_ext = os.path.splitext(file_path)
+        fourcc = VideoScene.codes_map.get(file_ext.lower())
+        if fourcc is None:
+            self.sig_export_error.emit(f'不支持的视频格式: {file_ext}')
+            return
+        self.sig_export_start.emit(indexes[-1])
 
         # 获取图像高、宽，以及需要保存的区域
         if self.crop_item and self.crop_item.rect().width() > 0 and self.crop_item.rect().height() > 0:
@@ -387,26 +394,35 @@ class VideoScene(QGraphicsScene):
             source = QRectF(0, 0, img_width, img_height)
 
         writer = cv2.VideoWriter()
-        fourcc = VideoScene.codes_map[file_ext]
         writer.open(file_path, cv2.VideoWriter.fourcc(*fourcc), fps, (img_width, img_height), True)
+        if not writer.isOpened():
+            self.sig_export_error.emit('无法创建视频文件, 请检查路径与写入权限')
+            return
 
         painter = QPainter()
 
-        # 逐帧导出
-        for frame in indexes:
-            self.change_display(frame)
-            img = QImage(img_width, img_height, QImage.Format.Format_ARGB32)
-            painter.begin(img)
-            self.render(painter, source=source)
-            painter.end()
-            shape = (img.height(), img.bytesPerLine() * 8 // img.depth(), 4)
-            ptr = img.bits()
-            arr = np.array(ptr, dtype=np.uint8).reshape(shape)
-            arr = arr[..., :3]
-            writer.write(arr)
-            self.sig_export_frame.emit(frame)
-
-        writer.release()
+        try:
+            # 逐帧导出
+            for frame in indexes:
+                self.change_display(frame)
+                img = QImage(img_width, img_height, QImage.Format.Format_ARGB32)
+                painter.begin(img)
+                self.render(painter, source=source)
+                painter.end()
+                shape = (img.height(), img.bytesPerLine() * 8 // img.depth(), 4)
+                ptr = img.bits()
+                arr = np.array(ptr, dtype=np.uint8).reshape(shape)
+                arr = arr[..., :3]
+                writer.write(arr)
+                self.sig_export_frame.emit(frame)
+                # 驱动事件循环刷新进度, 避免导出期间界面冻结
+                QApplication.processEvents()
+        except Exception:
+            traceback.print_exc()
+            self.sig_export_error.emit('导出过程中发生异常, 请查看控制台日志')
+            return
+        finally:
+            writer.release()
         self.sig_export_finish.emit()
 
     def refresh_items(self) -> None:

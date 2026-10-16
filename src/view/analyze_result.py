@@ -1,7 +1,7 @@
 import csv
 
 from PySide6.QtGui import QShowEvent, QCloseEvent
-from PySide6.QtWidgets import QDialog, QCompleter, QInputDialog, QFileDialog
+from PySide6.QtWidgets import QDialog, QCompleter, QInputDialog, QFileDialog, QMessageBox
 from PySide6.QtCore import Signal, Slot, Qt
 
 from src.ui.analyze_result_ui import Ui_dialog_result
@@ -81,9 +81,10 @@ class ResultDialog(QDialog):
         if len(text_ids) > 0:
             ids = list(text_ids)
             ids.sort()
-        # TODO 无权限时程序会退出
         file_name, _ = QFileDialog.getSaveFileName(self, 'Export Data', '', filter='CSV File(*.csv)')
-        if file_name:
+        if not file_name:
+            return
+        try:
             with open(file_name, 'w', newline='') as f:
                 writer = csv.writer(f)
                 for particle_id in ids:
@@ -93,8 +94,11 @@ class ResultDialog(QDialog):
                     for r in range(model.rowCount()):
                         row = []
                         for c in range(model.columnCount()):
-                            index = model.createIndex(r, c)
+                            index = model.index(r, c)
                             cell = model.data(index, Qt.ItemDataRole.DisplayRole)
                             row.append(str(cell))
                         writer.writerow(row)
                     writer.writerow([])
+        except OSError:
+            # 无写入权限/路径不存在时提示用户, 而不是异常退出
+            QMessageBox.warning(self, '导出失败', '无法写入文件, 请检查路径与写入权限')
