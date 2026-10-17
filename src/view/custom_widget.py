@@ -139,39 +139,24 @@ class ColorItem(QWidget):
 
 class GradientLabel(QLabel):
     clicked = Signal(QMouseEvent)
-    max_interpolated_duration = 1000
 
     def __init__(self, parent=None):
         super(GradientLabel, self).__init__(parent=parent)
         self.brush = QBrush()
         self.brush.setStyle(Qt.BrushStyle.LinearGradientPattern)
         self.painter = QPainter()
-        self.interpolated = QPropertyAnimation()
         self._colors = []
-        self.__init_interpolated()
 
     @property
     def colors(self) -> List[GradientColor]:
         return self._colors
 
-    def __init_interpolated(self):
-        self.interpolated = QPropertyAnimation()
-        self.interpolated.setDuration(self.max_interpolated_duration)
-
-    def get_color_at(self, pos: float):
-        real_pos = max(pos, 0)
-        real_pos = min(real_pos, 1)
-        self.interpolated.setCurrentTime(int(real_pos * self.max_interpolated_duration))
-        return self.interpolated.currentValue()
-
     def set_gradient(self, gradient_colors: Union[List[GradientColor], GradientColor]) -> None:
         if not isinstance(gradient_colors, list):
             gradient_colors = [gradient_colors]
         self._colors = gradient_colors
-        self.interpolated = QPropertyAnimation()
         gradient = QLinearGradient(0, 0, self.width(), 0)
         for gradient_color in gradient_colors:
-            self.interpolated.setKeyValueAt(gradient_color.pos, gradient_color.color)
             gradient.setColorAt(gradient_color.pos, gradient_color.color)
         self.brush = QBrush(gradient)
         pixmap = QPixmap(self.width(), self.height())
@@ -433,14 +418,24 @@ class TrajectoryItem(QGraphicsLineItem):
 
         self.refresh()
 
+    # 所有轨迹共用的速度颜色插值器(仅在轨迹速度颜色设置变化时重建),
+    # 避免每条轨迹各持有一个 QPropertyAnimation 造成内存与构造开销
+    _shared_interpolator = None
+    _shared_interpolator_key: tuple = ()
+
     def create_interpolated(self) -> QPropertyAnimation:
-        speed_colors = self.settings.value(SettingKey.trajectory_speed_color)
-        interpolated = QPropertyAnimation()
-        interpolated.setDuration(1000)
-        if speed_colors and len(speed_colors) > 0:
+        """获取速度颜色插值器(所有TrajectoryItem共享, 速度颜色设置变化时自动重建)"""
+        speed_colors = self.settings.value(SettingKey.trajectory_speed_color) or []
+        key = tuple((float(color.pos), str(color.color)) for color in speed_colors)
+        cls = type(self)
+        if cls._shared_interpolator is None or cls._shared_interpolator_key != key:
+            interpolated = QPropertyAnimation()
+            interpolated.setDuration(1000)
             for speed_color in speed_colors:
                 interpolated.setKeyValueAt(speed_color.pos, speed_color.color)
-        return interpolated
+            cls._shared_interpolator = interpolated
+            cls._shared_interpolator_key = key
+        return cls._shared_interpolator
 
     def get_speed_color(self, speed: float) -> QColor:
         speed = min(self._max_color_speed, speed)

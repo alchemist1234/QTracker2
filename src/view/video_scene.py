@@ -1,6 +1,6 @@
 import os
 import traceback
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Optional
 
 import cv2
 import numpy as np
@@ -47,8 +47,12 @@ class VideoScene(QGraphicsScene):
         self.data_helper = DataHelper(self.settings)
         # 当前添加到QGraphicsScene中的粒子Item
         self.particle_items = []
-        # 当前添加到QGraphicsScene中的轨迹Item
-        self.trajectory_items = []
+        # 轨迹显示增量状态: 帧 -> (DataHelper中该帧的源Item字典, 当前已显示的轨迹Item列表)
+        self._shown_trajectory: Dict[int, Tuple[dict, list]] = {}
+        # 上次显示时使用的粒子过滤集合(None表示尚未显示过)
+        self._shown_filter: Optional[set] = None
+        # 已显示轨迹中的最大帧号
+        self._shown_max: Optional[int] = None
         # 当前帧
         self.current_frame_index = -1
         # 当前鼠标按下位置
@@ -80,13 +84,16 @@ class VideoScene(QGraphicsScene):
         self.cache_frame(index, img)
 
     @Slot(int)
-    def change_display(self, index: int) -> None:
+    def change_display(self, index: int, refresh_items: bool = False) -> None:
         """
         切换帧显示
+        :param index: 帧ID
+        :param refresh_items: True=显示设置变化,轨迹Item需全量refresh;
+                              False=普通帧切换,轨迹显示增量更新
         """
         self.current_frame_index = index
         self.__change_frame_display(index)
-        self.__change_trajectory_display(index)
+        self.__change_trajectory_display(index, refresh_items)
         self.__change_particle_display(index)
         self.sig_frame_changed.emit(index)
 
@@ -142,17 +149,85 @@ class VideoScene(QGraphicsScene):
             item.refresh()
             self.addItem(item)
 
-    def __change_trajectory_display(self, frame_index: int) -> None:
+    @property
+    def trajectory_items(self) -> list:
+        """当前显示在Scene上的全部轨迹Item"""
+        return [item for _, items in self._shown_trajectory.values() for item in items]
+
+    def __change_trajectory_display(self, frame_index: int, refresh_items: bool = False) -> None:
         """
-        切换轨迹显示
+        切换轨迹显示(增量更新)
+        普通帧切换只增删受影响的帧段; refresh_items=True(显示设置变化)或过滤条件变化时全量重建。
         :param frame_index: 帧ID
+        :param refresh_items: 是否对所有已显示轨迹执行refresh
         """
-        for item in self.trajectory_items:
-            self.removeItem(item)
-        self.trajectory_items = self.data_helper.get_trajectory_items(frame_index)
-        for item in self.trajectory_items:
-            item.refresh()
-            self.addItem(item)
+        helper = self.data_helper.trajectory_items
+        filter_set = set(self.settings.list_value(SettingKey.index_filter))
+        shown = self._shown_trajectory
+
+        # 旧版语义: 当前帧没有粒子数据(如分析未覆盖该帧)时不显示轨迹
+        if frame_index not in self.data_helper.particle_group:
+            for _, items in shown.values():
+                for item in items:
+                    self.removeItem(item)
+            shown.clear()
+            self._shown_max = None
+            return
+
+        # 显示设置变化或过滤条件变化: 全量重建(与旧行为一致)
+        if refresh_items or (self._shown_filter is not None and self._shown_filter != filter_set):
+            for _, items in shown.values():
+                for item in items:
+                    self.removeItem(item)
+            shown.clear()
+            self._shown_max = None
+        self._shown_filter = filter_set
+
+        dirty = self.data_helper.take_dirty_frames()
+        prev_max = self._shown_max
+
+        # 1) 移除超出当前帧的帧段(按规模选择扫描方式, 避免每次全量扫描)
+        if prev_max is not None and prev_max > frame_index:
+            if len(shown) <= prev_max - frame_index:
+                stale = [f for f in shown if f > frame_index]
+            else:
+                stale = [f for f in range(prev_max, frame_index, -1) if f in shown]
+            for f in stale:
+                for item in shown[f][1]:
+                    self.removeItem(item)
+                del shown[f]
+
+        # 2) 移除源数据已被重建(update_frame_items)的帧段
+        for f in dirty:
+            entry = shown.pop(f, None)
+            if entry is not None:
+                for item in entry[1]:
+                    self.removeItem(item)
+
+        # 3) 新增: 未显示过的帧段 + 被重建的帧段
+        if not shown:
+            candidates = [f for f in helper if f <= frame_index]
+        else:
+            candidates = []
+            if prev_max is not None and frame_index > prev_max:
+                candidates.extend(f for f in range(prev_max + 1, frame_index + 1) if f in helper)
+            candidates.extend(f for f in dirty if f <= frame_index)
+        for f in sorted(set(candidates)):
+            source = helper.get(f)
+            if source is None or f in shown:
+                continue
+            items = [item for particle_id, item in source.items()
+                     if not filter_set or particle_id in filter_set]
+            for item in items:
+                item.refresh()
+                self.addItem(item)
+            shown[f] = (source, items)
+
+        # 维护最大已显示帧号(常见情况下O(1))
+        if shown:
+            self._shown_max = frame_index if frame_index in helper else max(shown)
+        else:
+            self._shown_max = None
 
     @Slot(int, list)
     def add_frame_particles(self, frame_index: int, particles: List[Tuple[int, Tuple[int, int]]]):
@@ -188,7 +263,7 @@ class VideoScene(QGraphicsScene):
         :param show: 是否显示
         """
         self.settings.set_value(SettingKey.show_particle, show)
-        self.change_display(self.current_frame_index)
+        self.change_display(self.current_frame_index, refresh_items=True)
 
     @Slot(bool)
     def set_mark_visible(self, show: bool) -> None:
@@ -197,7 +272,7 @@ class VideoScene(QGraphicsScene):
         :param show: 是否显示
         """
         self.settings.set_value(SettingKey.show_mark, show)
-        self.change_display(self.current_frame_index)
+        self.change_display(self.current_frame_index, refresh_items=True)
 
     @Slot(bool)
     def set_trajectory_visible(self, show: bool) -> None:
@@ -206,7 +281,7 @@ class VideoScene(QGraphicsScene):
         :param show: 是否显示
         """
         self.settings.set_value(SettingKey.show_trajectory, show)
-        self.change_display(self.current_frame_index)
+        self.change_display(self.current_frame_index, refresh_items=True)
 
     @Slot(str)
     def set_filter(self, filter_str: str) -> None:
@@ -216,7 +291,7 @@ class VideoScene(QGraphicsScene):
         """
         indexes = split_indexes_text(filter_str)
         self.settings.set_value(SettingKey.index_filter, indexes)
-        self.change_display(self.current_frame_index)
+        self.change_display(self.current_frame_index, refresh_items=True)
 
     def set_frame_label_visible(self, show: bool) -> None:
         """
@@ -224,7 +299,7 @@ class VideoScene(QGraphicsScene):
         :param show: 是否隐藏
         """
         self.settings.set_value(SettingKey.show_frame_label, show)
-        self.change_display(self.current_frame_index)
+        self.change_display(self.current_frame_index, refresh_items=True)
 
     def cache_frame(self, index: int, img: QImage):
         """
@@ -253,7 +328,7 @@ class VideoScene(QGraphicsScene):
         self.data_helper.clear()
         self.frame_cache.clear()
         self.particle_items.clear()
-        self.trajectory_items.clear()
+        # 轨迹显示项已由上面的 change_display(-1) 移除
         self.frame_label_item = None
         self.current_frame_item.setPixmap(QPixmap())
 
@@ -429,7 +504,7 @@ class VideoScene(QGraphicsScene):
         """
         显示设置更新后, 刷新item显示
         """
-        self.change_display(self.current_frame_index)
+        self.change_display(self.current_frame_index, refresh_items=True)
 
     @Slot(QRectF)
     def rect_changed(self, value):

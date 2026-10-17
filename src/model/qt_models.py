@@ -1,6 +1,6 @@
 import heapq
 import math
-from typing import Tuple, Dict, List, Collection, Optional, Union
+from typing import Tuple, Dict, List, Collection, Optional, Union, Set
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QObject, Signal
 
@@ -272,6 +272,8 @@ class DataHelper(QObject):
         self.analyze_result: Dict[int, List[AnalyzeResult]] = {}
         # 粒子数据计算完后更新状态栏信息
         self.particle_positions.sig_calculate_particle.connect(self.__calculate_particle)
+        # 自上次读取以来被重建过的帧(update_frame_items调用), 供场景增量刷新轨迹显示
+        self._dirty_frames: Set[int] = set()
 
     def add_particle(self, frame_index: int, particle_id: int, pos: Tuple[int, int]) -> None:
         """
@@ -370,12 +372,18 @@ class DataHelper(QObject):
         for frame in frame_index:
             self.update_frame_items(frame)
 
+    def take_dirty_frames(self) -> Set[int]:
+        """取出自上次调用以来被重建过的帧集合并清空记录"""
+        dirty, self._dirty_frames = self._dirty_frames, set()
+        return dirty
+
     def update_frame_items(self, frame_index: int) -> None:
         """
         更新一帧所有QGraphicItem，并更新所有受影响的帧
         :param frame_index: 帧
         """
         if frame_index is not None:
+            self._dirty_frames.add(frame_index)
             self.__update_particle_items(frame_index)
             self.__update_trajectory_items(frame_index)
 
@@ -491,6 +499,7 @@ class DataHelper(QObject):
         """
         清空数据
         """
+        self._dirty_frames.clear()
         self.particle_positions.clear()
         self.particle_group.clear()
         self.trajectory_items.clear()
